@@ -9,8 +9,56 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RecoveryRouteImport } from './routes/recovery'
+import { Route as RadarRouteImport } from './routes/radar'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MealsRouteImport } from './routes/meals'
+import { Route as ForecastRouteImport } from './routes/forecast'
+import { Route as DecisionRouteImport } from './routes/decision'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RecoveryRoute = RecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarRoute = RadarRouteImport.update({
+  id: '/radar',
+  path: '/radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MealsRoute = MealsRouteImport.update({
+  id: '/meals',
+  path: '/meals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForecastRoute = ForecastRouteImport.update({
+  id: '/forecast',
+  path: '/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionRoute = DecisionRouteImport.update({
+  id: '/decision',
+  path: '/decision',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +67,144 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/attendance': typeof AttendanceRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/attendance'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/meals'
+    | '/messages'
+    | '/radar'
+    | '/recovery'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/attendance'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/meals'
+    | '/messages'
+    | '/radar'
+    | '/recovery'
+  id:
+    | '__root__'
+    | '/'
+    | '/attendance'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/meals'
+    | '/messages'
+    | '/radar'
+    | '/recovery'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AttendanceRoute: typeof AttendanceRoute
+  CalendarRoute: typeof CalendarRoute
+  DecisionRoute: typeof DecisionRoute
+  ForecastRoute: typeof ForecastRoute
+  MealsRoute: typeof MealsRoute
+  MessagesRoute: typeof MessagesRoute
+  RadarRoute: typeof RadarRoute
+  RecoveryRoute: typeof RecoveryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/recovery': {
+      id: '/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof RecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar': {
+      id: '/radar'
+      path: '/radar'
+      fullPath: '/radar'
+      preLoaderRoute: typeof RadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meals': {
+      id: '/meals'
+      path: '/meals'
+      fullPath: '/meals'
+      preLoaderRoute: typeof MealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forecast': {
+      id: '/forecast'
+      path: '/forecast'
+      fullPath: '/forecast'
+      preLoaderRoute: typeof ForecastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decision': {
+      id: '/decision'
+      path: '/decision'
+      fullPath: '/decision'
+      preLoaderRoute: typeof DecisionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +217,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AttendanceRoute: AttendanceRoute,
+  CalendarRoute: CalendarRoute,
+  DecisionRoute: DecisionRoute,
+  ForecastRoute: ForecastRoute,
+  MealsRoute: MealsRoute,
+  MessagesRoute: MessagesRoute,
+  RadarRoute: RadarRoute,
+  RecoveryRoute: RecoveryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
