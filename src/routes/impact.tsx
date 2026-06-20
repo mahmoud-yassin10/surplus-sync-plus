@@ -2,8 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Activity, ArrowDownRight, Sparkles } from "lucide-react";
 import { Page, Section } from "../components/shell/AppShell";
 import { CountUp } from "../components/shell/motion";
+import { TiltCard } from "../components/shell/TiltCard";
 import { useStore } from "../lib/store";
-import { forecastViewFromState, preventedMealsDerivation, preventedMealsDescription } from "../lib/forecast";
+import {
+  forecastViewFromState,
+  preventedMealsDerivation,
+  preventedMealsDescription,
+} from "../lib/forecast";
 
 export const Route = createFileRoute("/impact")({
   head: () => ({ meta: [{ title: "Impact ledger — SurplusSync Plus" }] }),
@@ -46,7 +51,10 @@ function Impact() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 stagger-fast">
         <Small label="Students served" value={<CountUp value={i.studentsServed} />} />
-        <Small label="Procurement saved" value={<CountUp value={Math.round(i.costSaved)} prefix="$" />} />
+        <Small
+          label="Procurement saved"
+          value={<CountUp value={Math.round(i.costSaved)} prefix="$" />}
+        />
         <Small
           label="Forecast accuracy"
           value={<CountUp value={i.forecastAccuracy * 100} decimals={1} suffix="%" />}
@@ -59,10 +67,7 @@ function Impact() {
         hint="The same meal is never counted in more than one category"
       >
         <ul className="divide-y divide-[var(--color-line)]">
-          <Row
-            title="Prevented"
-            desc={preventedMealsDescription(view)}
-          />
+          <Row title="Prevented" desc={preventedMealsDescription(view)} />
           <Row
             title="Recovered"
             desc="Meals confirmed safe post-service and successfully picked up by a verified partner with completed distribution."
@@ -109,22 +114,24 @@ function Ledger({
         ? "text-[var(--color-success)]"
         : "text-[var(--color-critical)]";
   return (
-    <div className="hover-lift rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
-      <div className="flex items-center gap-2">
-        <Activity size={12} className={c} />
-        <span className="text-[11.5px] uppercase tracking-wider text-[var(--color-text-faint)]">
-          {title}
-        </span>
+    <TiltCard className="rounded-lg">
+      <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 h-full">
+        <div className="flex items-center gap-2">
+          <Activity size={12} className={c} />
+          <span className="text-[11.5px] uppercase tracking-wider text-[var(--color-text-faint)]">
+            {title}
+          </span>
+        </div>
+        <div className={`font-display text-[34px] font-semibold tnum mt-1 ${c}`}>
+          <CountUp value={value} />
+        </div>
+        <div className="text-[11.5px] text-[var(--color-text-soft)]">{sub}</div>
+        <div className="mt-3 pt-3 border-t border-[var(--color-line)] text-[10.5px] text-[var(--color-text-faint)]">
+          <div className="uppercase tracking-wider mb-0.5">{label}</div>
+          {derivation}
+        </div>
       </div>
-      <div className={`font-display text-[34px] font-semibold tnum mt-1 ${c}`}>
-        <CountUp value={value} />
-      </div>
-      <div className="text-[11.5px] text-[var(--color-text-soft)]">{sub}</div>
-      <div className="mt-3 pt-3 border-t border-[var(--color-line)] text-[10.5px] text-[var(--color-text-faint)]">
-        <div className="uppercase tracking-wider mb-0.5">{label}</div>
-        {derivation}
-      </div>
-    </div>
+    </TiltCard>
   );
 }
 
