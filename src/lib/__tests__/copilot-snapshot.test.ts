@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { INITIAL } from "../store";
-import { buildReconciliationSnapshot, COPILOT_ROLE_MAP, provisionalAlertsSent } from "../copilot-snapshot";
+import {
+  buildPartnerPrerequisites,
+  buildReconciliationSnapshot,
+  COPILOT_ROLE_MAP,
+  provisionalAlertsSent,
+} from "../copilot-snapshot";
 import { applyAttendanceCorrection } from "../forecast";
 
 describe("copilot reconciliation snapshot", () => {
@@ -24,6 +29,15 @@ describe("copilot reconciliation snapshot", () => {
         attendanceCorrected: false,
         provisionalAlertsSent: false,
         selectedPartnerId: "metro-food-bank",
+        partnerPrerequisites: {
+          surplusConfirmed: false,
+          surplusMeals: null,
+          foodSafetyChecklistComplete: false,
+          recoveryWindowValid: false,
+          proposalsPermitted: true,
+          resetVersion: 0,
+          cancellationVersion: 0,
+        },
       },
     });
   });
@@ -70,6 +84,36 @@ describe("copilot reconciliation snapshot", () => {
       "attendanceCorrected",
       "provisionalAlertsSent",
       "selectedPartnerId",
+      "partnerPrerequisites",
     ]);
+  });
+
+  it("derives partner prerequisites from human-completed recovery workflow state", () => {
+    const ready = {
+      ...INITIAL,
+      surplusConfirmed: 64,
+      checklistComplete: true,
+      audit: [
+        {
+          id: "a3",
+          ts: "2026-03-12T10:05:00Z",
+          actor: "Maya Rodriguez",
+          actorType: "human" as const,
+          action: "Cancelled provisional alerts",
+          reversible: true,
+        },
+        ...INITIAL.audit,
+      ],
+    };
+
+    expect(buildPartnerPrerequisites(ready)).toEqual({
+      surplusConfirmed: true,
+      surplusMeals: 64,
+      foodSafetyChecklistComplete: true,
+      recoveryWindowValid: true,
+      proposalsPermitted: true,
+      resetVersion: 0,
+      cancellationVersion: 1,
+    });
   });
 });

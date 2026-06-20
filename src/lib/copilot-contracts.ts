@@ -134,6 +134,17 @@ export const reconciliationOperationalSchema = z
     attendanceCorrected: z.boolean(),
     provisionalAlertsSent: z.boolean(),
     selectedPartnerId: z.string().min(1).nullable(),
+    partnerPrerequisites: z
+      .object({
+        surplusConfirmed: z.boolean(),
+        surplusMeals: z.number().int().nonnegative().nullable(),
+        foodSafetyChecklistComplete: z.boolean(),
+        recoveryWindowValid: z.boolean(),
+        proposalsPermitted: z.boolean(),
+        resetVersion: z.number().int().nonnegative(),
+        cancellationVersion: z.number().int().nonnegative(),
+      })
+      .strict(),
   })
   .strict();
 
