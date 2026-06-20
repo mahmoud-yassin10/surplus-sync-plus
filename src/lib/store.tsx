@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
+import type { ForecastProvenance } from "./forecast-gateway-types";
 import {
   CALENDAR_EVENTS,
   FORECAST_THURSDAY,
@@ -43,6 +44,9 @@ export interface State {
   role: Role;
   aiMode: boolean;
   forecast: Forecast;
+  forecastProvenance: ForecastProvenance | null;
+  forecastLoadStatus: "idle" | "loading" | "ready" | "error";
+  forecastLoadError: string | null;
   currentPlan: number;
   approvedRecommendationKey: string | null;
   attendanceCorrected: boolean;
@@ -61,6 +65,9 @@ export const INITIAL: State = {
   role: "manager",
   aiMode: true,
   forecast: FORECAST_THURSDAY,
+  forecastProvenance: null,
+  forecastLoadStatus: "idle",
+  forecastLoadError: null,
   currentPlan: 730,
   approvedRecommendationKey: null,
   attendanceCorrected: false,
@@ -79,9 +86,12 @@ export type Action =
   | { type: "RESET" }
   | { type: "SET_ROLE"; role: Role }
   | { type: "TOGGLE_AI" }
+  | { type: "FORECAST_LOAD_START" }
+  | { type: "SET_FORECAST"; forecast: Forecast; provenance: ForecastProvenance }
+  | { type: "FORECAST_LOAD_ERROR"; message: string }
   | { type: "APPLY_RECOMMENDATION" }
   | { type: "SET_PLAN"; meals: number }
-  | { type: "CORRECT_ATTENDANCE" }
+  | { type: "CORRECT_ATTENDANCE"; forecast?: Forecast; provenance?: ForecastProvenance }
   | { type: "SEND_PROVISIONAL_ALERTS" }
   | { type: "PARTNER_RESERVE"; partnerId: string; meals: number }
   | { type: "PARTNER_DECLINE"; partnerId: string }
@@ -156,6 +166,30 @@ export function reducer(state: State, action: Action): State {
           reversible: true,
         }),
       };
+    case "FORECAST_LOAD_START":
+      return {
+        ...state,
+        forecastLoadStatus: "loading",
+        forecastLoadError: null,
+      };
+    case "SET_FORECAST": {
+      const key = buildRecommendationKey(action.forecast);
+      const keepApproval = state.approvedRecommendationKey === key;
+      return {
+        ...state,
+        forecast: action.forecast,
+        forecastProvenance: action.provenance,
+        forecastLoadStatus: "ready",
+        forecastLoadError: null,
+        approvedRecommendationKey: keepApproval ? state.approvedRecommendationKey : null,
+      };
+    }
+    case "FORECAST_LOAD_ERROR":
+      return {
+        ...state,
+        forecastLoadStatus: "error",
+        forecastLoadError: action.message,
+      };
     case "APPLY_RECOMMENDATION": {
       if (!guardRole(state, "APPLY_RECOMMENDATION")) {
         return denied(state, "APPLY_RECOMMENDATION", "Requires cafeteria manager role.");
@@ -213,11 +247,12 @@ export function reducer(state: State, action: Action): State {
       }
       if (state.attendanceCorrected) return state;
       const beforeAttendance = state.forecast.expectedAttendance;
-      const corrected = applyAttendanceCorrection(state.forecast);
+      const corrected = action.forecast ?? applyAttendanceCorrection(state.forecast);
       return {
         ...state,
         attendanceCorrected: true,
         forecast: corrected,
+        forecastProvenance: action.provenance ?? state.forecastProvenance,
         approvedRecommendationKey: null,
         audit: withAudit(state, {
           actor: ACTOR_NAMES[state.role],
@@ -493,7 +528,13 @@ const STORAGE_KEY = "ssp_state_v2";
 export function hydrateState(raw: string): State {
   try {
     const parsed = JSON.parse(raw) as Partial<State> & { approvedRecommendation?: boolean };
-    const base = { ...INITIAL, ...parsed } as State;
+    const base = {
+      ...INITIAL,
+      ...parsed,
+      forecastLoadStatus: "idle" as const,
+      forecastLoadError: null,
+      forecastProvenance: null,
+    } as State;
     if (!("approvedRecommendationKey" in parsed) && parsed.approvedRecommendation) {
       base.approvedRecommendationKey = buildRecommendationKey(base.forecast);
     }
@@ -521,7 +562,13 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const {
+        forecastLoadStatus: _status,
+        forecastLoadError: _error,
+        forecastProvenance: _prov,
+        ...persisted
+      } = state;
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
     } catch {
       /* ignore corrupt localStorage */
     }

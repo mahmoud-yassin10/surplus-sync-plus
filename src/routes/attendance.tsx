@@ -11,6 +11,8 @@ import {
 import { Page, Section } from "../components/shell/AppShell";
 import { ApprovalGate } from "../components/approval/ApprovalGate";
 import { ATTENDANCE_HISTORY } from "../lib/mock";
+import { DEMO_FOCUS_DATE } from "../lib/demo-date";
+import { defaultForecastProvider } from "../lib/forecast-client";
 import { useStore } from "../lib/store";
 import { canPerform } from "../lib/permissions";
 
@@ -93,7 +95,15 @@ function Attendance() {
             }
             reversible
             status={state.attendanceCorrected ? "approved" : "pending"}
-            onApprove={() => dispatch({ type: "CORRECT_ATTENDANCE" })}
+            onApprove={async () => {
+              try {
+                const { forecast, provenance } =
+                  await defaultForecastProvider.getAttendanceWhatIf(DEMO_FOCUS_DATE);
+                dispatch({ type: "CORRECT_ATTENDANCE", forecast, provenance });
+              } catch {
+                dispatch({ type: "CORRECT_ATTENDANCE" });
+              }
+            }}
             allowed={canPerform(state.role, "CORRECT_ATTENDANCE")}
           />
         </div>
