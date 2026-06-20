@@ -23,6 +23,9 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AttendanceRouteImport } from './routes/attendance'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiForecastRouteImport } from './routes/api/forecast'
+import { Route as ApiForecastWhatIfRouteImport } from './routes/api/forecast/what-if'
+import { Route as ApiForecastHealthRouteImport } from './routes/api/forecast/health'
 
 const RecoveryRoute = RecoveryRouteImport.update({
   id: '/recovery',
@@ -94,6 +97,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiForecastRoute = ApiForecastRouteImport.update({
+  id: '/api/forecast',
+  path: '/api/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiForecastWhatIfRoute = ApiForecastWhatIfRouteImport.update({
+  id: '/what-if',
+  path: '/what-if',
+  getParentRoute: () => ApiForecastRoute,
+} as any)
+const ApiForecastHealthRoute = ApiForecastHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
+  getParentRoute: () => ApiForecastRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +128,9 @@ export interface FileRoutesByFullPath {
   '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
+  '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/forecast/health': typeof ApiForecastHealthRoute
+  '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +147,9 @@ export interface FileRoutesByTo {
   '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
+  '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/forecast/health': typeof ApiForecastHealthRoute
+  '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +167,9 @@ export interface FileRoutesById {
   '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
+  '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/forecast/health': typeof ApiForecastHealthRoute
+  '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +188,9 @@ export interface FileRouteTypes {
     | '/pickups'
     | '/radar'
     | '/recovery'
+    | '/api/forecast'
+    | '/api/forecast/health'
+    | '/api/forecast/what-if'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +207,9 @@ export interface FileRouteTypes {
     | '/pickups'
     | '/radar'
     | '/recovery'
+    | '/api/forecast'
+    | '/api/forecast/health'
+    | '/api/forecast/what-if'
   id:
     | '__root__'
     | '/'
@@ -193,6 +226,9 @@ export interface FileRouteTypes {
     | '/pickups'
     | '/radar'
     | '/recovery'
+    | '/api/forecast'
+    | '/api/forecast/health'
+    | '/api/forecast/what-if'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +246,7 @@ export interface RootRouteChildren {
   PickupsRoute: typeof PickupsRoute
   RadarRoute: typeof RadarRoute
   RecoveryRoute: typeof RecoveryRoute
+  ApiForecastRoute: typeof ApiForecastRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -312,8 +349,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/forecast': {
+      id: '/api/forecast'
+      path: '/api/forecast'
+      fullPath: '/api/forecast'
+      preLoaderRoute: typeof ApiForecastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/forecast/what-if': {
+      id: '/api/forecast/what-if'
+      path: '/what-if'
+      fullPath: '/api/forecast/what-if'
+      preLoaderRoute: typeof ApiForecastWhatIfRouteImport
+      parentRoute: typeof ApiForecastRoute
+    }
+    '/api/forecast/health': {
+      id: '/api/forecast/health'
+      path: '/health'
+      fullPath: '/api/forecast/health'
+      preLoaderRoute: typeof ApiForecastHealthRouteImport
+      parentRoute: typeof ApiForecastRoute
+    }
   }
 }
+
+interface ApiForecastRouteChildren {
+  ApiForecastHealthRoute: typeof ApiForecastHealthRoute
+  ApiForecastWhatIfRoute: typeof ApiForecastWhatIfRoute
+}
+
+const ApiForecastRouteChildren: ApiForecastRouteChildren = {
+  ApiForecastHealthRoute: ApiForecastHealthRoute,
+  ApiForecastWhatIfRoute: ApiForecastWhatIfRoute,
+}
+
+const ApiForecastRouteWithChildren = ApiForecastRoute._addFileChildren(
+  ApiForecastRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -330,6 +402,7 @@ const rootRouteChildren: RootRouteChildren = {
   PickupsRoute: PickupsRoute,
   RadarRoute: RadarRoute,
   RecoveryRoute: RecoveryRoute,
+  ApiForecastRoute: ApiForecastRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppStoreProvider } from "../lib/store";
+import { useForecastBootstrap } from "../lib/use-forecast-bootstrap";
 import { AppShell } from "../components/shell/AppShell";
 
 function NotFoundComponent() {
@@ -133,10 +134,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppStoreProvider>
+        <ForecastBootstrap />
         <AppShell>
           <Outlet />
         </AppShell>
       </AppStoreProvider>
     </QueryClientProvider>
   );
+}
+
+function ForecastBootstrap() {
+  useForecastBootstrap();
+  return null;
 }

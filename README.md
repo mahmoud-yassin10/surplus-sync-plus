@@ -11,9 +11,34 @@ as it works through a high-risk surplus event on Thursday March 12, 2026.
 
 ## Run locally
 
-```
+```powershell
 bun install
 bun run dev
+```
+
+### ML forecast service (optional, recommended)
+
+Terminal 1 — Python ML service:
+
+```powershell
+cd ..\surplussync-ml-service
+.\.venv\Scripts\Activate.ps1
+uvicorn surplussync_ml.api.main:app --host 127.0.0.1 --port 8000
+```
+
+Terminal 2 — SurplusSync Plus frontend:
+
+```powershell
+cd ..\SurplusSync\surplussync-plus-web
+$env:ML_SERVICE_URL="http://127.0.0.1:8000"
+bun run dev
+```
+
+Copy `.env.example` to `.env` for persistent server-only variables (`ML_SERVICE_URL`, `ML_REQUEST_TIMEOUT_MS`, `ALLOW_FORECAST_FALLBACK`). These are **never** exposed as `VITE_*` variables.
+
+The browser calls `/api/forecast` on the TanStack Start server, which proxies to the private Python ML service. When the ML service is stopped, the canonical March 12 demo can still run via `ALLOW_FORECAST_FALLBACK=true`.
+
+```bash
 bun run test:run
 ```
 
@@ -52,7 +77,7 @@ src/
     mock.ts          demonstration data (school, partners, calendar, history)
     demo-date.ts     canonical Thursday Mar 12, 2026 timeline + demo timestamps
     forecast.ts      centralized forecast math + ForecastView builder
-    forecast-client.ts  ForecastProvider interface (local + HTTP placeholder)
+    forecast-client.ts  ForecastProvider (gateway HTTP + local fallback)
     permissions.ts   role checks for consequential actions
     invariants.ts    business rule guards
     store.tsx        reducer + provider + persistent demo state
@@ -120,9 +145,10 @@ isolated:
   `supabase.auth.signInWithPassword(...)`, and `supabase.channel(...)`
   subscriptions. The action union in `store.tsx` mirrors the mutations a
   Supabase schema would expose.
-- **FastAPI forecasting service** — use `ForecastProvider` in `forecast-client.ts`.
-  `LocalForecastProvider` serves the offline demo; `HttpForecastProvider` is a
-  placeholder for `fetch('/api/forecast?date=...')`. The `Forecast` type is the wire contract.
+- **FastAPI forecasting service** — `HttpForecastProvider` in `forecast-client.ts`
+  calls the server gateway at `/api/forecast`, `/api/forecast/what-if`, and
+  `/api/forecast/health`. The gateway proxies to `ML_SERVICE_URL` server-side.
+  `LocalForecastProvider` remains for tests and canonical offline fallback.
 - **Gemini-powered Copilot** — `CopilotDrawer`'s deterministic `reply()`
   function is the single integration point. Swap it for a server function that
   calls the Gemini API with the same `Reply` shape (which includes
@@ -130,7 +156,7 @@ isolated:
 
 ## Simulated functionality (prototype)
 
-- Forecast values are hand-tuned demonstration data — no live model is run.
+- Forecast values load from the ML service through the server gateway when available; canonical March 12 falls back to locked demo data when the service is down.
 - Partner reservations, driver assignments, and pickup ETAs are scripted.
 - The Copilot responds with deterministic mocked replies (no LLM call).
 - All persistence is local to the browser; reset clears it.
