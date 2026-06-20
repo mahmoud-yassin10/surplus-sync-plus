@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, CheckCircle2, Clock, Sparkles, TriangleAlert } from "lucide-react";
-import { Page, RiskPill, Section, StatLabel, StatValue } from "../components/shell/AppShell";
+import { Page, RiskPill, Section, StatLabel } from "../components/shell/AppShell";
+import { CountUp, SkeletonStat, SkeletonText } from "../components/shell/motion";
 import { HorizonRibbon } from "../components/forecast/HorizonRibbon";
 import { EvidenceTrigger } from "../components/forecast/EvidenceDrawer";
 import { useStore } from "../lib/store";
@@ -26,6 +27,35 @@ function CommandCenter() {
   const view = forecastViewFromState(state);
   const f = state.forecast;
   const horizon = syncHorizonFocusDay(HORIZON_DAYS, f, state.currentPlan);
+  const loading = state.forecastLoadStatus === "loading";
+
+  if (loading) {
+    return (
+      <Page kicker="School Command Center" title={`${view.focusDateShort} forecast loading…`}>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonStat key={i} />
+          ))}
+        </div>
+        <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4 mb-5">
+          <div className="skeleton h-3 w-40 mb-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="skeleton h-20" />
+            ))}
+          </div>
+        </div>
+        <div className="grid lg:grid-cols-[1.5fr_1fr] gap-5">
+          <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+            <SkeletonText lines={6} />
+          </div>
+          <div className="rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] p-4">
+            <SkeletonText lines={6} />
+          </div>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page
@@ -33,7 +63,7 @@ function CommandCenter() {
       title={`${view.focusDateShort} is a high-risk surplus event`}
     >
       {/* Operational strip */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5 stagger-fast">
         <Strip
           label="Risk"
           value={<RiskPill level={f.risk} />}
@@ -41,15 +71,18 @@ function CommandCenter() {
         />
         <Strip
           label="Current plan"
-          value={<span className="tnum text-[18px] font-semibold">{state.currentPlan}</span>}
+          value={
+            <CountUp value={state.currentPlan} className="text-[18px] font-semibold font-display" />
+          }
           note="meals prepared"
         />
         <Strip
           label="AI recommendation"
           value={
-            <span className="tnum text-[18px] font-semibold text-[var(--color-ai)]">
-              {f.recommendedPrep}
-            </span>
+            <CountUp
+              value={f.recommendedPrep}
+              className="text-[18px] font-semibold font-display text-[var(--color-ai)]"
+            />
           }
           note={
             view.approvedForCurrentRecommendation
@@ -60,9 +93,12 @@ function CommandCenter() {
         <Strip
           label="Shortage probability"
           value={
-            <span className="tnum text-[18px] font-semibold">
-              {(view.shortageProb * 100).toFixed(1)}%
-            </span>
+            <CountUp
+              value={view.shortageProb * 100}
+              decimals={1}
+              suffix="%"
+              className="text-[18px] font-semibold font-display"
+            />
           }
           note="80% interval respected"
         />
@@ -95,7 +131,7 @@ function CommandCenter() {
               {f.influences.map((i) => (
                 <li
                   key={i.factor}
-                  className="px-4 py-3 grid grid-cols-[20px_1fr_auto] gap-3 items-center"
+                  className="px-4 py-3 grid grid-cols-[20px_1fr_auto] gap-3 items-center transition-colors hover:bg-[var(--color-surface-2)]"
                 >
                   <span
                     className={`h-2 w-2 rounded-full ${i.direction === "down" ? "bg-[var(--color-critical)]" : "bg-[var(--color-success)]"}`}
@@ -129,7 +165,7 @@ function CommandCenter() {
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link
                   to="/decision"
-                  className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white"
+                  className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white"
                 >
                   Open Decision Canvas
                 </Link>
@@ -137,9 +173,10 @@ function CommandCenter() {
                   <button
                     disabled={!canPerform(state.role, "APPLY_RECOMMENDATION")}
                     onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })}
-                    className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5 disabled:opacity-40"
+                    className="group press text-[12px] px-3 py-2 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5 disabled:opacity-40 shadow-[0_4px_14px_-8px_var(--color-ai)]"
                   >
-                    <Sparkles size={12} /> Apply AI recommendation
+                    <Sparkles size={12} className="transition-transform duration-300 group-hover:rotate-12" />{" "}
+                    Apply AI recommendation
                   </button>
                 )}
                 {view.approvedForCurrentRecommendation && (
@@ -163,9 +200,9 @@ function CommandCenter() {
                 <li key={m.item} className="px-4 py-2.5 flex items-center">
                   <span className="text-[12.5px] text-[var(--color-text)]">{m.item}</span>
                   <div className="ml-auto flex items-center gap-3">
-                    <div className="w-32 h-1 rounded-full bg-[var(--color-line)] hidden sm:block">
+                    <div className="w-32 h-1 rounded-full bg-[var(--color-line)] hidden sm:block overflow-hidden">
                       <div
-                        className="h-1 rounded-full bg-[var(--color-ai)]"
+                        className="grow-x h-1 rounded-full bg-[var(--color-ai)]"
                         style={{ width: `${(m.recommended / 600) * 100}%` }}
                       />
                     </div>
@@ -197,7 +234,10 @@ function CommandCenter() {
               {state.partners.slice(0, 4).map((p) => {
                 const match = state.matches.find((m) => m.partnerId === p.id);
                 return (
-                  <li key={p.id} className="px-4 py-2.5 flex items-center gap-2">
+                  <li
+                    key={p.id}
+                    className="px-4 py-2.5 flex items-center gap-2 transition-colors hover:bg-[var(--color-surface-2)]"
+                  >
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${p.status === "available" ? "bg-[var(--color-success)]" : p.status === "limited" ? "bg-[var(--color-warning)]" : "bg-[var(--color-text-faint)]"}`}
                     />
@@ -271,7 +311,7 @@ function CommandCenter() {
               </Link>
             }
           >
-            <div className="p-4 grid grid-cols-2 gap-3">
+            <div className="p-4 grid grid-cols-2 gap-3 stagger-fast">
               <Ledger
                 label="Prevented"
                 value={state.impact.preventedMeals}
@@ -321,7 +361,7 @@ function CommandCenter() {
 
 function Strip({ label, value, note }: { label: string; value: React.ReactNode; note: string }) {
   return (
-    <div className="rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5">
+    <div className="hover-lift rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-2.5">
       <StatLabel>{label}</StatLabel>
       <div className="mt-1.5">{value}</div>
       <div className="text-[10.5px] text-[var(--color-text-faint)] mt-1">{note}</div>
@@ -348,10 +388,13 @@ function Ledger({
         : tone === "critical"
           ? "text-[var(--color-critical)]"
           : "text-[var(--color-text)]";
+  const numeric = typeof value === "number";
   return (
-    <div className="rounded-md border border-[var(--color-line)] p-3">
+    <div className="hover-lift rounded-md border border-[var(--color-line)] p-3">
       <StatLabel>{label}</StatLabel>
-      <div className={`text-[20px] font-semibold tnum mt-0.5 ${c}`}>{value}</div>
+      <div className={`font-display text-[20px] font-semibold tnum mt-0.5 ${c}`}>
+        {numeric ? <CountUp value={value as number} /> : value}
+      </div>
       <div className="text-[10.5px] text-[var(--color-text-faint)]">{sub}</div>
     </div>
   );
@@ -380,7 +423,7 @@ function PlanComparison({
       <div className="relative h-14">
         <div className="absolute inset-y-6 left-0 right-0 h-2 rounded-full bg-[var(--color-line)]" />
         <div
-          className="absolute inset-y-6 h-2 rounded-full bg-[var(--color-ai-soft)]"
+          className="grow-x absolute inset-y-6 h-2 rounded-full bg-[var(--color-ai-soft)]"
           style={{ left: pct(low), width: `calc(${pct(high)} - ${pct(low)})` }}
         />
 

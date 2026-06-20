@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Send, Snowflake, Truck } from "lucide-react";
+import { Map as MapIcon, Network, Send, Snowflake, Truck } from "lucide-react";
 import { Page, Section } from "../components/shell/AppShell";
 import { NetworkMap } from "../components/recovery/NetworkMap";
+import { RecoveryGeoMap } from "../components/recovery/RecoveryGeoMap";
 import { useStore } from "../lib/store";
 
 export const Route = createFileRoute("/recovery")({
@@ -19,7 +20,7 @@ function Recovery() {
   return (
     <Page kicker="Recovery network" title="Partner readiness · 5 organizations"
       actions={
-        <button onClick={() => dispatch({ type: "SEND_PROVISIONAL_ALERTS" })} disabled={alertsSent > 0} className="text-[12px] px-3 py-1.5 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5 disabled:opacity-50">
+        <button onClick={() => dispatch({ type: "SEND_PROVISIONAL_ALERTS" })} disabled={alertsSent > 0} className="press text-[12px] px-3 py-1.5 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5 disabled:opacity-50 shadow-[0_4px_14px_-8px_var(--color-ai)]">
           <Send size={12} /> {alertsSent > 0 ? "Provisional alerts sent" : "Send provisional alerts"}
         </button>
       }
@@ -37,7 +38,7 @@ function Recovery() {
                 <span className="capitalize">{partner.status}</span>
                 <span className="ml-auto text-[var(--color-text-faint)]">{partner.distanceMi} mi</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 stagger-fast">
                 <Cell label="Capacity" value={`${partner.capacity} meals`} />
                 <Cell label="Pickup window" value={`${partner.windowStart}–${partner.windowEnd}`} />
                 <Cell label="Refrigerated" value={partner.refrigerated ? "Yes" : "No"} icon={<Snowflake size={11} />} />
@@ -48,9 +49,9 @@ function Recovery() {
                 {partner.accepts.join(" · ")}
               </div>
               {partner.notes && <p className="text-[11.5px] text-[var(--color-text-soft)]">{partner.notes}</p>}
-              <div className="flex gap-2 pt-2">
-                <button onClick={() => dispatch({ type: "PARTNER_RESERVE", partnerId: partner.id, meals: Math.min(95, partner.capacity) })} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white">Reserve tentative capacity</button>
-                <button onClick={() => dispatch({ type: "PARTNER_DECLINE", partnerId: partner.id })} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">Mark unavailable</button>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <button onClick={() => dispatch({ type: "PARTNER_RESERVE", partnerId: partner.id, meals: Math.min(95, partner.capacity) })} className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white">Reserve tentative capacity</button>
+                <button onClick={() => dispatch({ type: "PARTNER_DECLINE", partnerId: partner.id })} className="press text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)]">Mark unavailable</button>
               </div>
             </div>
           )}
@@ -58,7 +59,8 @@ function Recovery() {
 
         <div className="lg:col-span-2">
           <Section title="Partner roster" hint="Filter by availability and compatibility">
-            <table className="w-full text-[12.5px]">
+            <div className="overflow-x-auto">
+            <table className="w-full text-[12.5px] min-w-[640px]">
               <thead className="text-[var(--color-text-faint)] uppercase text-[9.5px] tracking-wider border-b border-[var(--color-line)]">
                 <tr>
                   <th className="text-left px-4 py-2 font-medium">Partner</th>
@@ -82,6 +84,7 @@ function Recovery() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Section>
         </div>
       </div>
@@ -91,9 +94,9 @@ function Recovery() {
 
 function Cell({ label, value, icon }: { label: string; value: string; icon?: any }) {
   return (
-    <div className="rounded border border-[var(--color-line)] p-2.5">
+    <div className="hover-lift rounded border border-[var(--color-line)] p-2.5">
       <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-faint)] flex items-center gap-1">{icon}{label}</div>
-      <div className="text-[13px] mt-0.5">{value}</div>
+      <div className="text-[13px] mt-0.5 font-medium">{value}</div>
     </div>
   );
 }

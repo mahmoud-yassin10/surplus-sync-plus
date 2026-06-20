@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, ChevronRight, Sparkles, X } from "lucide-react";
 import { Page, Section, StatLabel } from "../components/shell/AppShell";
+import { CountUp, SkeletonStat } from "../components/shell/motion";
 import { EvidenceTrigger } from "../components/forecast/EvidenceDrawer";
 import { useStore } from "../lib/store";
 import { forecastViewFromState } from "../lib/forecast";
@@ -15,6 +16,7 @@ function Forecast() {
   const { state, dispatch } = useStore();
   const f = state.forecast;
   const view = forecastViewFromState(state);
+  const loading = state.forecastLoadStatus === "loading";
 
   return (
     <Page
@@ -38,21 +40,44 @@ function Forecast() {
             title="Demand forecast"
             hint={`Model ${f.modelVersion} · data quality ${f.dataQuality}`}
           >
-            <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Big label="Expected attendance" value={f.expectedAttendance} unit="students" />
+            {loading ? (
+              <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonStat key={i} />
+                ))}
+              </div>
+            ) : (
+            <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-4 stagger-fast">
+              <Big
+                label="Expected attendance"
+                value={<CountUp value={f.expectedAttendance} />}
+                unit="students"
+              />
               <Big label="80% interval" value={view.intervalLabel} unit="students" />
-              <Big label="Recommended prep" value={f.recommendedPrep} tone="ai" unit="meals" />
-              <Big label="Shortage probability" value={`${(view.shortageProb * 100).toFixed(1)}%`} />
+              <Big
+                label="Recommended prep"
+                value={<CountUp value={f.recommendedPrep} />}
+                tone="ai"
+                unit="meals"
+              />
+              <Big
+                label="Shortage probability"
+                value={<CountUp value={view.shortageProb * 100} decimals={1} suffix="%" />}
+              />
               <Big
                 label="Preventable surplus"
-                value={f.preventableSurplus}
+                value={<CountUp value={f.preventableSurplus} />}
                 tone="critical"
                 unit="meals"
               />
-              <Big label="Large-surplus prob" value={`${(f.largeSurplusProb * 100).toFixed(0)}%`} />
+              <Big
+                label="Large-surplus prob"
+                value={<CountUp value={f.largeSurplusProb * 100} suffix="%" />}
+              />
               <Big label="Safety buffer" value={`+${view.safetyBuffer}`} unit="above 80% upper" />
               <Big label="Max safe reduction" value={`${view.maxSafeReduction}`} unit="meals" />
             </div>
+            )}
           </Section>
 
           <Section title="Menu-level recommendation">
@@ -65,7 +90,10 @@ function Forecast() {
               </thead>
               <tbody>
                 {f.menu.map((m) => (
-                  <tr key={m.item} className="border-b border-[var(--color-line)] last:border-0">
+                  <tr
+                    key={m.item}
+                    className="border-b border-[var(--color-line)] last:border-0 transition-colors hover:bg-[var(--color-surface-2)]"
+                  >
                     <td className="px-4 py-2.5 text-[var(--color-text)]">{m.item}</td>
                     <td className="px-4 py-2.5 text-right tnum">{m.recommended}</td>
                   </tr>
@@ -80,7 +108,7 @@ function Forecast() {
                 <button
                   disabled={!canPerform(state.role, "APPLY_RECOMMENDATION")}
                   onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })}
-                  className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1.5 disabled:opacity-40"
+                  className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1.5 disabled:opacity-40 shadow-[0_4px_14px_-8px_var(--color-success)]"
                 >
                   <CheckCircle2 size={12} /> Approve {f.recommendedPrep} meals
                 </button>
@@ -115,7 +143,10 @@ function Forecast() {
           >
             <ul className="divide-y divide-[var(--color-line)]">
               {f.influences.map((i) => (
-                <li key={i.factor} className="px-4 py-2.5">
+                <li
+                  key={i.factor}
+                  className="px-4 py-2.5 transition-colors hover:bg-[var(--color-surface-2)]"
+                >
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${i.direction === "down" ? "bg-[var(--color-critical)]" : "bg-[var(--color-success)]"}`}
@@ -138,7 +169,10 @@ function Forecast() {
             <table className="w-full text-[12px]">
               <tbody>
                 {f.similarDays.map((d) => (
-                  <tr key={d.date} className="border-b border-[var(--color-line)] last:border-0">
+                  <tr
+                    key={d.date}
+                    className="border-b border-[var(--color-line)] last:border-0 transition-colors hover:bg-[var(--color-surface-2)]"
+                  >
                     <td className="px-4 py-2 tnum text-[var(--color-text-soft)]">{d.date}</td>
                     <td className="px-4 py-2 text-right tnum font-medium">{d.attendance}</td>
                     <td className="px-4 py-2 pl-1 text-[var(--color-text-faint)]">{d.note}</td>
@@ -172,7 +206,7 @@ function Big({
   tone,
 }: {
   label: string;
-  value: any;
+  value: React.ReactNode;
   unit?: string;
   tone?: "ai" | "critical";
 }) {
@@ -183,9 +217,9 @@ function Big({
         ? "text-[var(--color-critical)]"
         : "text-[var(--color-text)]";
   return (
-    <div className="rounded-md border border-[var(--color-line)] p-3">
+    <div className="hover-lift rounded-md border border-[var(--color-line)] p-3">
       <StatLabel>{label}</StatLabel>
-      <div className={`text-[20px] font-semibold tnum mt-0.5 ${c}`}>{value}</div>
+      <div className={`font-display text-[20px] font-semibold tnum mt-0.5 ${c}`}>{value}</div>
       {unit && <div className="text-[10.5px] text-[var(--color-text-faint)]">{unit}</div>}
     </div>
   );

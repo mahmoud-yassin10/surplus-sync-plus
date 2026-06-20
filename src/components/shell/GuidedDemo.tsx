@@ -79,13 +79,16 @@ export function GuidedDemo() {
     <>
       <button
         onClick={() => dispatch({ type: "GUIDED_STEP", step: 1 })}
-        className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md bg-[var(--color-ink)] text-white hover:opacity-90"
+        className="press text-[11px] flex items-center gap-1 px-2 py-1 rounded-md bg-[var(--color-ink)] text-white hover:opacity-90"
       >
         <Play size={11} /> Start guided demo
       </button>
 
       {active && step && (
-        <div className="fixed bottom-5 right-5 z-50 w-[340px] rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] shadow-xl overflow-hidden">
+        <div
+          key={state.guidedStep}
+          className="animate-rise fixed bottom-5 right-5 z-[var(--z-toast)] w-[340px] max-w-[calc(100vw-2.5rem)] rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] shadow-xl overflow-hidden"
+        >
           <div className="px-4 py-2.5 border-b border-[var(--color-line)] flex items-center bg-[var(--color-ink)] text-white">
             <div className="text-[10.5px] uppercase tracking-[0.16em] opacity-70">
               Guided demo · step {state.guidedStep} of {STEPS.length}

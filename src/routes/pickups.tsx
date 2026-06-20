@@ -68,7 +68,7 @@ function Pickups() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-[12px]">
+            <div className="grid grid-cols-2 gap-3 text-[12px] stagger-fast">
               <Field label="Actual attendance" value="541" />
               <Field label="Meals served" value="498" />
               <Field
@@ -123,14 +123,14 @@ function Pickups() {
               <button
                 disabled={!canManage || state.surplusConfirmed != null}
                 onClick={() => dispatch({ type: "CONFIRM_SURPLUS", meals: surplus })}
-                className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white disabled:opacity-40 flex items-center gap-1.5"
+                className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white disabled:opacity-40 flex items-center gap-1.5"
               >
                 <CheckCircle2 size={12} /> Confirm {surplus} recoverable meals
               </button>
               <button
                 disabled={!canManage || state.checklistComplete || !checklistDone}
                 onClick={() => dispatch({ type: "COMPLETE_CHECKLIST" })}
-                className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] disabled:opacity-40"
+                className="press text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)] disabled:opacity-40"
               >
                 Complete checklist
               </button>
@@ -144,7 +144,7 @@ function Pickups() {
                       meals: state.surplusConfirmed!,
                     })
                   }
-                  className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white disabled:opacity-40"
+                  className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white disabled:opacity-40"
                 >
                   Assign Metro Community Food Bank
                 </button>
@@ -154,7 +154,7 @@ function Pickups() {
         </Section>
 
         <Section title="Partner ranking" hint="AI proposes; human can override">
-          <div className="p-4 space-y-3">
+          <div className="p-4 space-y-3 stagger-fast">
             <PartnerRow
               rank={1}
               name="Metro Community Food Bank"
@@ -241,7 +241,7 @@ function Field({
   onChange?: (n: number) => void;
 }) {
   return (
-    <div className="rounded border border-[var(--color-line)] p-2.5">
+    <div className={`hover-lift rounded border p-2.5 ${editable ? "border-[var(--color-ai)]/40 bg-[var(--color-ai-soft)]/20" : "border-[var(--color-line)]"}`}>
       <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-faint)]">
         {label}
       </div>
@@ -272,7 +272,7 @@ function PartnerRow({
 }) {
   return (
     <div
-      className={`flex items-start gap-3 rounded border p-2.5 ${picked ? "border-[var(--color-success)]/30 bg-[var(--color-success-soft)]/30" : "border-[var(--color-line)]"}`}
+      className={`hover-lift flex items-start gap-3 rounded border p-2.5 ${picked ? "border-[var(--color-success)]/30 bg-[var(--color-success-soft)]/30" : "border-[var(--color-line)]"}`}
     >
       <div className="h-6 w-6 rounded-full bg-[var(--color-ink)] text-white flex items-center justify-center text-[11px] font-semibold tnum shrink-0">
         {rank}
@@ -298,14 +298,14 @@ function Timeline({
   const idx = STAGES.findIndex((s) => s.id === status);
   return (
     <div>
-      <ol className="grid grid-cols-2 md:grid-cols-5 gap-1.5">
+      <ol className="grid grid-cols-2 md:grid-cols-5 gap-1.5 stagger-fast">
         {STAGES.map((s, i) => {
           const past = i < idx;
           const current = i === idx;
           return (
             <li
               key={s.id}
-              className={`rounded-md border p-2.5 text-[11px] ${
+              className={`rounded-md border p-2.5 text-[11px] transition-colors ${
                 past
                   ? "border-[var(--color-success)]/30 bg-[var(--color-success-soft)]/30 text-[var(--color-success)]"
                   : current
@@ -313,7 +313,12 @@ function Timeline({
                     : "border-[var(--color-line)] text-[var(--color-text-faint)]"
               }`}
             >
-              <div className="text-[9.5px] uppercase tracking-wider opacity-70">Stage {i + 1}</div>
+              <div className="flex items-center gap-1 text-[9.5px] uppercase tracking-wider opacity-70">
+                Stage {i + 1}
+                {current && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-ai)] pulse-dot" />
+                )}
+              </div>
               <div className="text-[12px] font-medium mt-0.5">{s.label}</div>
             </li>
           );
@@ -324,7 +329,7 @@ function Timeline({
           <button
             onClick={onAdvance}
             disabled={!canAdvance}
-            className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white flex items-center gap-1.5 disabled:opacity-40"
+            className="press text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white flex items-center gap-1.5 disabled:opacity-40"
           >
             Advance to next stage <ChevronRight size={12} />
           </button>
