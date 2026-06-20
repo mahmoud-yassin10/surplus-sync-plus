@@ -11,12 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RecoveryRouteImport } from './routes/recovery'
 import { Route as RadarRouteImport } from './routes/radar'
+import { Route as PickupsRouteImport } from './routes/pickups'
+import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MealsRouteImport } from './routes/meals'
+import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as ForecastRouteImport } from './routes/forecast'
 import { Route as DecisionRouteImport } from './routes/decision'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RecoveryRoute = RecoveryRouteImport.update({
@@ -29,6 +34,16 @@ const RadarRoute = RadarRouteImport.update({
   path: '/radar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PickupsRoute = PickupsRouteImport.update({
+  id: '/pickups',
+  path: '/pickups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -37,6 +52,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const MealsRoute = MealsRouteImport.update({
   id: '/meals',
   path: '/meals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactRoute = ImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForecastRoute = ForecastRouteImport.update({
@@ -54,9 +74,19 @@ const CalendarRoute = CalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AttendanceRoute = AttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,35 +97,50 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/decision': typeof DecisionRoute
   '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
   '/meals': typeof MealsRoute
   '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/decision': typeof DecisionRoute
   '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
   '/meals': typeof MealsRoute
   '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
   '/calendar': typeof CalendarRoute
   '/decision': typeof DecisionRoute
   '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
   '/meals': typeof MealsRoute
   '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
 }
@@ -103,46 +148,66 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/attendance'
+    | '/audit'
     | '/calendar'
     | '/decision'
     | '/forecast'
+    | '/impact'
     | '/meals'
     | '/messages'
+    | '/partner'
+    | '/pickups'
     | '/radar'
     | '/recovery'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/attendance'
+    | '/audit'
     | '/calendar'
     | '/decision'
     | '/forecast'
+    | '/impact'
     | '/meals'
     | '/messages'
+    | '/partner'
+    | '/pickups'
     | '/radar'
     | '/recovery'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/attendance'
+    | '/audit'
     | '/calendar'
     | '/decision'
     | '/forecast'
+    | '/impact'
     | '/meals'
     | '/messages'
+    | '/partner'
+    | '/pickups'
     | '/radar'
     | '/recovery'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AttendanceRoute: typeof AttendanceRoute
+  AuditRoute: typeof AuditRoute
   CalendarRoute: typeof CalendarRoute
   DecisionRoute: typeof DecisionRoute
   ForecastRoute: typeof ForecastRoute
+  ImpactRoute: typeof ImpactRoute
   MealsRoute: typeof MealsRoute
   MessagesRoute: typeof MessagesRoute
+  PartnerRoute: typeof PartnerRoute
+  PickupsRoute: typeof PickupsRoute
   RadarRoute: typeof RadarRoute
   RecoveryRoute: typeof RecoveryRoute
 }
@@ -163,6 +228,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RadarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pickups': {
+      id: '/pickups'
+      path: '/pickups'
+      fullPath: '/pickups'
+      preLoaderRoute: typeof PickupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages': {
       id: '/messages'
       path: '/messages'
@@ -175,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/meals'
       fullPath: '/meals'
       preLoaderRoute: typeof MealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impact': {
+      id: '/impact'
+      path: '/impact'
+      fullPath: '/impact'
+      preLoaderRoute: typeof ImpactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forecast': {
@@ -198,11 +284,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/attendance': {
       id: '/attendance'
       path: '/attendance'
       fullPath: '/attendance'
       preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -217,12 +317,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AttendanceRoute: AttendanceRoute,
+  AuditRoute: AuditRoute,
   CalendarRoute: CalendarRoute,
   DecisionRoute: DecisionRoute,
   ForecastRoute: ForecastRoute,
+  ImpactRoute: ImpactRoute,
   MealsRoute: MealsRoute,
   MessagesRoute: MessagesRoute,
+  PartnerRoute: PartnerRoute,
+  PickupsRoute: PickupsRoute,
   RadarRoute: RadarRoute,
   RecoveryRoute: RecoveryRoute,
 }
