@@ -14,11 +14,16 @@ as it works through a high-risk surplus event on Thursday March 12, 2026.
 ```
 bun install
 bun run dev
+bun run test:run
 ```
 
 Then open `http://localhost:3000`. Use the **Start guided demo** button in the
 top bar to walk through the full demonstration in nine steps. **Reset demo**
 restores the initial state at any time.
+
+Run `bun run test:run` for reducer and workflow tests.
+
+This repository uses **Bun** as its package manager (`bun.lock`). Do not add `package-lock.json`.
 
 ## Frontend architecture
 
@@ -45,6 +50,11 @@ src/
   lib/
     types.ts         domain models
     mock.ts          demonstration data (school, partners, calendar, history)
+    demo-date.ts     canonical Thursday Mar 12, 2026 timeline + demo timestamps
+    forecast.ts      centralized forecast math + ForecastView builder
+    forecast-client.ts  ForecastProvider interface (local + HTTP placeholder)
+    permissions.ts   role checks for consequential actions
+    invariants.ts    business rule guards
     store.tsx        reducer + provider + persistent demo state
   routes/            TanStack file-based routes (one per surface)
   styles.css         Tailwind v4 + design tokens
@@ -75,7 +85,7 @@ Defined in `src/lib/types.ts`:
 `src/lib/store.tsx` exposes `useStore()` for any component. It owns role,
 forecast, current plan, attendance correction state, matches, pickups, audit
 log, messages, and impact ledger. State persists to `localStorage` under the
-key `ssp_state_v1`. **Reset Demo** dispatches `RESET` and restores the
+key `ssp_state_v2` (migrates from `ssp_state_v1`). **Reset Demo** dispatches `RESET` and restores the
 original prototype state.
 
 ## Guided demo sequence
@@ -88,7 +98,7 @@ Nine steps wired into `src/components/shell/GuidedDemo.tsx`:
 4. Correct attendance (cancelled field trip)
 5. Send provisional partner alerts
 6. Reserve partner capacity
-7. Confirm same-day surplus & complete checklist
+7. Confirm same-day surplus, complete checklist, assign partner
 8. Advance pickup to delivered
 9. Review impact ledger & audit storyline
 
@@ -110,9 +120,9 @@ isolated:
   `supabase.auth.signInWithPassword(...)`, and `supabase.channel(...)`
   subscriptions. The action union in `store.tsx` mirrors the mutations a
   Supabase schema would expose.
-- **FastAPI forecasting service** — replace `FORECAST_THURSDAY` and
-  `HORIZON_DAYS` reads with `fetch('/api/forecast?date=...')` calls. The
-  `Forecast` type is the wire contract.
+- **FastAPI forecasting service** — use `ForecastProvider` in `forecast-client.ts`.
+  `LocalForecastProvider` serves the offline demo; `HttpForecastProvider` is a
+  placeholder for `fetch('/api/forecast?date=...')`. The `Forecast` type is the wire contract.
 - **Gemini-powered Copilot** — `CopilotDrawer`'s deterministic `reply()`
   function is the single integration point. Swap it for a server function that
   calls the Gemini API with the same `Reply` shape (which includes
