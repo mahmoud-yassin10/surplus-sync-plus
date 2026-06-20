@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEMO_FOCUS_DATE } from "../../lib/demo-date";
 import { FORECAST_THURSDAY } from "../../lib/mock";
@@ -34,6 +35,30 @@ const correctedMlResponse = {
   intervalHigh: 568,
   recommendedPrep: 575,
   preventableSurplus: 155,
+};
+
+const noncanonicalFeaturesA = {
+  school_id: "lhphs",
+  date: "2026-03-13",
+  enrolled: 820,
+  eligible: 760,
+  normal_prep: 730,
+  menu_name: "Cheese pizza",
+  menu_popularity: 1.075,
+  recent_attendance_7d: 705,
+  recent_attendance_14d: 702,
+};
+
+const noncanonicalFeaturesB = {
+  school_id: "lhphs",
+  date: "2026-03-14",
+  enrolled: 820,
+  eligible: 760,
+  normal_prep: 730,
+  menu_name: "Grain bowl",
+  menu_popularity: 0.945,
+  recent_attendance_7d: 690,
+  recent_attendance_14d: 688,
 };
 
 function mockEnv(overrides: Record<string, string | undefined>) {
@@ -86,7 +111,7 @@ describe("forecast-gateway", () => {
     });
   });
 
-  it("returns canonical forecast through the gateway from ML", async () => {
+  it("returns canonical forecast through the gateway from ML with compact request", async () => {
     const result = await gatewayGetForecast(DEMO_FOCUS_DATE, "lhphs");
     expect(result.provenance.source).toBe("ml");
     expect(result.forecast.expectedAttendance).toBe(528);
@@ -94,7 +119,75 @@ describe("forecast-gateway", () => {
     expect(result.provenance.decisionStatus).toBe("PROPOSED");
   });
 
-  it("returns corrected attendance what-if from ML", async () => {
+  it("rejects noncanonical forecast without explicit features", async () => {
+    await expect(gatewayGetForecast("2026-03-13", "lhphs")).rejects.toMatchObject({
+      code: "NONCANONICAL_FEATURES_REQUIRED",
+      status: 422,
+    });
+  });
+
+  it("rejects noncanonical what-if without explicit features and changes", async () => {
+    await expect(gatewayGetAttendanceWhatIf("2026-03-13", "lhphs")).rejects.toMatchObject({
+      code: "NONCANONICAL_FEATURES_REQUIRED",
+      status: 422,
+    });
+  });
+
+  it("passes supplied noncanonical features to ML unchanged", async () => {
+    const upstreamBodies: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith("/v1/forecast")) {
+          upstreamBodies.push(String(init?.body));
+          return new Response(JSON.stringify({ ...canonicalMlResponse, date: "2026-03-13" }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      }),
+    );
+
+    await gatewayGetForecast("2026-03-13", "lhphs", noncanonicalFeaturesA);
+    expect(upstreamBodies).toHaveLength(1);
+    expect(JSON.parse(upstreamBodies[0]!)).toEqual(noncanonicalFeaturesA);
+    expect(upstreamBodies[0]).not.toContain("is_exam");
+    expect(upstreamBodies[0]).not.toContain("trip_students");
+  });
+
+  it("sends different upstream bodies for different noncanonical feature sets", async () => {
+    const upstreamBodies: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo, init?: RequestInit) => {
+        if (String(input).endsWith("/v1/forecast")) {
+          upstreamBodies.push(String(init?.body));
+          return new Response(JSON.stringify(canonicalMlResponse), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      }),
+    );
+
+    await gatewayGetForecast("2026-03-13", "lhphs", noncanonicalFeaturesA);
+    await gatewayGetForecast("2026-03-14", "lhphs", noncanonicalFeaturesB);
+    expect(upstreamBodies[0]).not.toBe(upstreamBodies[1]);
+    expect(upstreamBodies[0]).toContain("Cheese pizza");
+    expect(upstreamBodies[1]).toContain("Grain bowl");
+  });
+
+  it("does not hardcode noncanonical operational defaults in gateway logic", () => {
+    const source = readFileSync(new URL("../forecast-gateway.ts", import.meta.url), "utf8");
+    expect(source).not.toContain("Cheese pizza");
+    expect(source).not.toMatch(/recent_attendance_7d:\s*705/);
+    expect(source).not.toMatch(/recent_attendance_14d:\s*702/);
+  });
+
+  it("returns corrected attendance what-if from ML for canonical compact request", async () => {
     const result = await gatewayGetAttendanceWhatIf(DEMO_FOCUS_DATE, "lhphs");
     expect(result.provenance.source).toBe("ml");
     expect(result.forecast.expectedAttendance).toBe(540);
@@ -147,12 +240,14 @@ describe("forecast-gateway", () => {
     expect(result.forecast.expectedAttendance).toBe(528);
   });
 
-  it("does not fabricate noncanonical fallback", async () => {
+  it("does not fabricate noncanonical fallback when ML is unavailable", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response("down", { status: 503 })),
     );
-    await expect(gatewayGetForecast("2026-03-13", "lhphs")).rejects.toMatchObject({
+    await expect(
+      gatewayGetForecast("2026-03-13", "lhphs", noncanonicalFeaturesA),
+    ).rejects.toMatchObject({
       code: "NONCANONICAL_UNAVAILABLE",
     });
   });

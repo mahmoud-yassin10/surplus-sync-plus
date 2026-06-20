@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { gatewayWhatIfRequestSchema } from "../../../lib/forecast-gateway-types";
+import { ZodError } from "zod";
+import { gatewayWhatIfRequestSchema, mlForecastFeaturesInputSchema } from "../../../lib/forecast-gateway-types";
 import { ForecastGatewayError, gatewayGetAttendanceWhatIf } from "../../../server/forecast-gateway";
 
 export const Route = createFileRoute("/api/forecast/what-if")({
@@ -15,7 +16,15 @@ export const Route = createFileRoute("/api/forecast/what-if")({
               { status: 400 },
             );
           }
-          const result = await gatewayGetAttendanceWhatIf(parsed.date, parsed.schoolId);
+          const features = parsed.features
+            ? mlForecastFeaturesInputSchema.parse(parsed.features)
+            : undefined;
+          const result = await gatewayGetAttendanceWhatIf(
+            parsed.date,
+            parsed.schoolId,
+            features,
+            parsed.changes,
+          );
           return Response.json(result);
         } catch (error) {
           if (error instanceof ForecastGatewayError) {
@@ -25,6 +34,12 @@ export const Route = createFileRoute("/api/forecast/what-if")({
                 provenance: error.provenance,
               },
               { status: error.status },
+            );
+          }
+          if (error instanceof ZodError) {
+            return Response.json(
+              { error: { code: "BAD_REQUEST", message: "Invalid what-if request" } },
+              { status: 400 },
             );
           }
           return Response.json(

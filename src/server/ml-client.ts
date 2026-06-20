@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { mlConfig } from "./ml-config";
+import type { MlForecastFeaturesInput } from "../lib/forecast-gateway-types";
+import { mlForecastFeaturesInputSchema } from "../lib/forecast-gateway-types";
 import {
-  mlForecastFeaturesSchema,
   mlForecastResponseSchema,
   mlHealthResponseSchema,
   mlWhatIfRequestSchema,
-  type MlForecastFeatures,
   type MlForecastResponse,
 } from "./ml-schemas";
 import { MlClientError } from "./forecast-mapper";
@@ -72,16 +72,16 @@ async function fetchMl<T>(
 }
 
 export async function postMlForecast(
-  features: MlForecastFeatures,
+  features: MlForecastFeaturesInput,
 ): Promise<MlFetchResult<MlForecastResponse>> {
-  const body = mlForecastFeaturesSchema.parse(features);
+  const body = mlForecastFeaturesInputSchema.parse(features);
   return fetchMl("/v1/forecast", { method: "POST", body: JSON.stringify(body) }, (json) =>
     mlForecastResponseSchema.parse(json),
   );
 }
 
 export async function postMlWhatIf(
-  base: MlForecastFeatures,
+  base: MlForecastFeaturesInput,
   changes: Record<string, number | boolean | string>,
 ): Promise<MlFetchResult<MlForecastResponse>> {
   const body = mlWhatIfRequestSchema.parse({ base, changes });

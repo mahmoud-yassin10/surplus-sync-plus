@@ -2,8 +2,8 @@ import { DEMO_FOCUS_DATE } from "../lib/demo-date";
 import { applyAttendanceCorrection } from "../lib/forecast";
 import { FORECAST_THURSDAY } from "../lib/mock";
 import type { Forecast } from "../lib/types";
-import type { MlForecastFeatures } from "./ml-schemas";
-import { mlForecastFeaturesSchema } from "./ml-schemas";
+import type { MlForecastFeaturesInput } from "../lib/forecast-gateway-types";
+import { mlForecastFeaturesInputSchema } from "../lib/forecast-gateway-types";
 
 export const CANONICAL_SCHOOL_ID = "lhphs";
 
@@ -12,8 +12,8 @@ export function isCanonicalForecastRequest(date: string, schoolId: string): bool
 }
 
 /** Locked canonical ML feature payload for Thursday Mar 12, 2026. */
-export function canonicalMlFeatures(schoolId = CANONICAL_SCHOOL_ID): MlForecastFeatures {
-  return mlForecastFeaturesSchema.parse({
+export function canonicalMlFeatures(schoolId = CANONICAL_SCHOOL_ID): MlForecastFeaturesInput {
+  return mlForecastFeaturesInputSchema.parse({
     school_id: schoolId,
     date: DEMO_FOCUS_DATE,
     enrolled: 820,

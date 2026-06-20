@@ -11,8 +11,7 @@ import {
 } from "./canonical-forecast";
 import { mlResponseToForecast, MlClientError } from "./forecast-mapper";
 import { getMlHealth, postMlForecast, postMlWhatIf } from "./ml-client";
-import type { MlForecastFeatures } from "./ml-schemas";
-import { mlForecastFeaturesSchema } from "./ml-schemas";
+import type { MlForecastFeaturesInput } from "../lib/forecast-gateway-types";
 
 export class ForecastGatewayError extends Error {
   constructor(
@@ -22,7 +21,9 @@ export class ForecastGatewayError extends Error {
       | "ML_INVALID_RESPONSE"
       | "ML_URL_ABSENT"
       | "FALLBACK_DISABLED"
-      | "NONCANONICAL_UNAVAILABLE",
+      | "NONCANONICAL_UNAVAILABLE"
+      | "NONCANONICAL_FEATURES_REQUIRED"
+      | "BAD_REQUEST",
     message: string,
     public readonly status = 503,
     public readonly provenance?: ForecastProvenance,
@@ -30,6 +31,62 @@ export class ForecastGatewayError extends Error {
     super(message);
     this.name = "ForecastGatewayError";
   }
+}
+
+function assertFeaturesMatchRequest(
+  features: MlForecastFeaturesInput,
+  date: string,
+  schoolId: string,
+): void {
+  if (features.school_id !== schoolId || features.date !== date) {
+    throw new ForecastGatewayError(
+      "BAD_REQUEST",
+      "features.school_id and features.date must match schoolId and date",
+      400,
+    );
+  }
+}
+
+export function resolveForecastFeatures(
+  date: string,
+  schoolId: string,
+  features: MlForecastFeaturesInput | undefined,
+): MlForecastFeaturesInput {
+  if (isCanonicalForecastRequest(date, schoolId)) {
+    return canonicalMlFeatures(schoolId);
+  }
+  if (!features) {
+    throw new ForecastGatewayError(
+      "NONCANONICAL_FEATURES_REQUIRED",
+      "Noncanonical forecast requests must include a complete validated features object",
+      422,
+    );
+  }
+  assertFeaturesMatchRequest(features, date, schoolId);
+  return features;
+}
+
+export function resolveWhatIfRequest(
+  date: string,
+  schoolId: string,
+  features: MlForecastFeaturesInput | undefined,
+  changes: Record<string, number | boolean | string> | undefined,
+): { base: MlForecastFeaturesInput; changes: Record<string, number | boolean | string> } {
+  if (isCanonicalForecastRequest(date, schoolId)) {
+    return {
+      base: canonicalMlFeatures(schoolId),
+      changes: canonicalAttendanceCorrectionChanges(),
+    };
+  }
+  if (!features || !changes) {
+    throw new ForecastGatewayError(
+      "NONCANONICAL_FEATURES_REQUIRED",
+      "Noncanonical what-if requests must include explicit base features and changes",
+      422,
+    );
+  }
+  assertFeaturesMatchRequest(features, date, schoolId);
+  return { base: features, changes };
 }
 
 function buildProvenance(
@@ -43,20 +100,6 @@ function buildProvenance(
     decisionStatus: "PROPOSED",
     approvalRequired: true,
   };
-}
-
-function featuresForDate(date: string, schoolId: string): MlForecastFeatures {
-  if (isCanonicalForecastRequest(date, schoolId)) {
-    return canonicalMlFeatures(schoolId);
-  }
-  return mlForecastFeaturesSchema.parse({
-    school_id: schoolId,
-    date,
-    menu_name: "Cheese pizza",
-    menu_popularity: 1.075,
-    recent_attendance_7d: 705,
-    recent_attendance_14d: 702,
-  });
 }
 
 function useCanonicalFallback(
@@ -110,10 +153,12 @@ function fromMlError(error: unknown, canonical: boolean, pick: () => Forecast) {
 export async function gatewayGetForecast(
   date: string,
   schoolId: string,
+  suppliedFeatures?: MlForecastFeaturesInput,
 ): Promise<{ forecast: Forecast; provenance: ForecastProvenance }> {
   const canonical = isCanonicalForecastRequest(date, schoolId);
+  const features = resolveForecastFeatures(date, schoolId, suppliedFeatures);
   try {
-    const { data } = await postMlForecast(featuresForDate(date, schoolId));
+    const { data } = await postMlForecast(features);
     return {
       forecast: mlResponseToForecast(data),
       provenance: buildProvenance("ml", { mlReachable: true, fallbackUsed: false }),
@@ -129,10 +174,16 @@ export async function gatewayGetForecast(
 export async function gatewayGetAttendanceWhatIf(
   date: string,
   schoolId: string,
+  suppliedFeatures?: MlForecastFeaturesInput,
+  suppliedChanges?: Record<string, number | boolean | string>,
 ): Promise<{ forecast: Forecast; provenance: ForecastProvenance }> {
   const canonical = isCanonicalForecastRequest(date, schoolId);
-  const base = featuresForDate(date, schoolId);
-  const changes = canonicalAttendanceCorrectionChanges();
+  const { base, changes } = resolveWhatIfRequest(
+    date,
+    schoolId,
+    suppliedFeatures,
+    suppliedChanges,
+  );
 
   try {
     const { data } = await postMlWhatIf(base, changes);

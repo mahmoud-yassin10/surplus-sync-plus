@@ -1,5 +1,29 @@
 import { z } from "zod";
 
+/** Explicit ML feature inputs — no gateway defaults; missing required fields fail validation. */
+export const mlForecastFeaturesInputSchema = z.object({
+  school_id: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  enrolled: z.number().int().positive(),
+  eligible: z.number().int().positive(),
+  normal_prep: z.number().int().nonnegative(),
+  menu_name: z.string().min(1),
+  menu_popularity: z.number().min(0.5).max(1.5),
+  recent_attendance_7d: z.number().nonnegative(),
+  recent_attendance_14d: z.number().nonnegative(),
+  expected_attendance: z.number().int().nonnegative().optional(),
+  is_exam: z.boolean().optional(),
+  trip_students: z.number().int().nonnegative().optional(),
+  early_dismissal: z.boolean().optional(),
+  assembly_students: z.number().int().nonnegative().optional(),
+  sports_students: z.number().int().nonnegative().optional(),
+  rain_probability: z.number().min(0).max(1).optional(),
+  rain_inches: z.number().nonnegative().optional(),
+  temperature_f: z.number().optional(),
+});
+
+export type MlForecastFeaturesInput = z.infer<typeof mlForecastFeaturesInputSchema>;
+
 export const forecastProvenanceSchema = z.object({
   source: z.enum(["ml", "local-canonical-fallback"]),
   mlReachable: z.boolean(),
@@ -13,6 +37,7 @@ export type ForecastProvenance = z.infer<typeof forecastProvenanceSchema>;
 export const gatewayForecastRequestSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   schoolId: z.string().min(1).default("lhphs"),
+  features: mlForecastFeaturesInputSchema.optional(),
 });
 
 export type GatewayForecastRequest = z.infer<typeof gatewayForecastRequestSchema>;
@@ -21,6 +46,8 @@ export const gatewayWhatIfRequestSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   scenario: z.enum(["attendance-trip-cancelled"]).default("attendance-trip-cancelled"),
   schoolId: z.string().min(1).default("lhphs"),
+  features: mlForecastFeaturesInputSchema.optional(),
+  changes: z.record(z.union([z.number(), z.boolean(), z.string()])).optional(),
 });
 
 export type GatewayWhatIfRequest = z.infer<typeof gatewayWhatIfRequestSchema>;

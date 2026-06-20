@@ -1,32 +1,22 @@
 import { z } from "zod";
+import {
+  mlForecastFeaturesInputSchema,
+  type MlForecastFeaturesInput,
+} from "../lib/forecast-gateway-types";
 
-/** ML service POST /v1/forecast request body (snake_case wire format). */
-export const mlForecastFeaturesSchema = z.object({
-  school_id: z.string().min(1),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  enrolled: z.number().int().positive().default(820),
-  eligible: z.number().int().positive().default(760),
-  normal_prep: z.number().int().nonnegative().default(730),
-  expected_attendance: z.number().int().nonnegative().optional(),
-  is_exam: z.boolean().default(false),
-  trip_students: z.number().int().nonnegative().default(0),
-  early_dismissal: z.boolean().default(false),
-  assembly_students: z.number().int().nonnegative().default(0),
-  sports_students: z.number().int().nonnegative().default(0),
-  rain_probability: z.number().min(0).max(1).default(0),
-  rain_inches: z.number().nonnegative().default(0),
-  temperature_f: z.number().default(55),
-  menu_name: z.string().default("Chicken & rice"),
-  menu_popularity: z.number().min(0.5).max(1.5).default(1),
-  recent_attendance_7d: z.number().nonnegative().default(705),
-  recent_attendance_14d: z.number().nonnegative().default(702),
-});
+export type { MlForecastFeaturesInput };
 
-export type MlForecastFeatures = z.infer<typeof mlForecastFeaturesSchema>;
+/** @deprecated Used only for canonical fixture assembly — not for noncanonical passthrough. */
+export const mlForecastFeaturesSchema = mlForecastFeaturesInputSchema;
+export type MlForecastFeatures = MlForecastFeaturesInput;
+
+export const mlWhatIfChangesSchema = z.record(
+  z.union([z.number(), z.boolean(), z.string()]),
+);
 
 export const mlWhatIfRequestSchema = z.object({
-  base: mlForecastFeaturesSchema,
-  changes: z.record(z.union([z.number(), z.boolean(), z.string()])),
+  base: mlForecastFeaturesInputSchema,
+  changes: mlWhatIfChangesSchema,
 });
 
 export const mlMenuPredictionSchema = z.object({
