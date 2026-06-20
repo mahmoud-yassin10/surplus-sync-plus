@@ -39,7 +39,7 @@ export function buildPartnerPrerequisites(
     surplusMeals,
     foodSafetyChecklistComplete: state.checklistComplete,
     recoveryWindowValid,
-    proposalsPermitted: true,
+    proposalsPermitted: state.aiMode,
     resetVersion: 0,
     cancellationVersion: state.audit.filter(
       (entry) => entry.action === "Cancelled provisional alerts",
@@ -73,6 +73,7 @@ export function buildReconciliationSnapshot(state: State): ReconciliationSnapsho
       attendanceCorrected: state.attendanceCorrected,
       provisionalAlertsSent: provisionalAlertsSent(state),
       selectedPartnerId: resolveSelectedPartnerId(state),
+      proposalsPermitted: state.aiMode,
       partnerPrerequisites: buildPartnerPrerequisites(state),
     },
   };

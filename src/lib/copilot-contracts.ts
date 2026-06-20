@@ -134,6 +134,7 @@ export const reconciliationOperationalSchema = z
     attendanceCorrected: z.boolean(),
     provisionalAlertsSent: z.boolean(),
     selectedPartnerId: z.string().min(1).nullable(),
+    proposalsPermitted: z.boolean(),
     partnerPrerequisites: z
       .object({
         surplusConfirmed: z.boolean(),

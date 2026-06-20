@@ -29,6 +29,7 @@ describe("copilot reconciliation snapshot", () => {
         attendanceCorrected: false,
         provisionalAlertsSent: false,
         selectedPartnerId: "metro-food-bank",
+        proposalsPermitted: true,
         partnerPrerequisites: {
           surplusConfirmed: false,
           surplusMeals: null,
@@ -84,8 +85,17 @@ describe("copilot reconciliation snapshot", () => {
       "attendanceCorrected",
       "provisionalAlertsSent",
       "selectedPartnerId",
+      "proposalsPermitted",
       "partnerPrerequisites",
     ]);
+  });
+
+  it("serializes manual mode as proposal mode disabled", () => {
+    const manual = { ...INITIAL, aiMode: false };
+    const snapshot = buildReconciliationSnapshot(manual);
+
+    expect(snapshot.operational.proposalsPermitted).toBe(false);
+    expect(snapshot.operational.partnerPrerequisites.proposalsPermitted).toBe(false);
   });
 
   it("derives partner prerequisites from human-completed recovery workflow state", () => {
