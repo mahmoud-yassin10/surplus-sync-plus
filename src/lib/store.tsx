@@ -93,6 +93,7 @@ export type Action =
   | { type: "SET_PLAN"; meals: number }
   | { type: "CORRECT_ATTENDANCE"; forecast?: Forecast; provenance?: ForecastProvenance }
   | { type: "SEND_PROVISIONAL_ALERTS" }
+  | { type: "CANCEL_PROVISIONAL_ALERTS" }
   | { type: "PARTNER_RESERVE"; partnerId: string; meals: number }
   | { type: "PARTNER_DECLINE"; partnerId: string }
   | { type: "CONFIRM_SURPLUS"; meals: number }
@@ -269,6 +270,9 @@ export function reducer(state: State, action: Action): State {
       if (!guardRole(state, "SEND_PROVISIONAL_ALERTS")) {
         return denied(state, "SEND_PROVISIONAL_ALERTS", "Requires manager or administrator role.");
       }
+      if (state.audit.some((a) => a.action.startsWith("Sent provisional surplus alert"))) {
+        return state;
+      }
       const eligible = state.partners.filter((p) => p.status === "available");
       const messages = eligible.reduce<Message[]>((acc, p) => {
         return [
@@ -293,6 +297,27 @@ export function reducer(state: State, action: Action): State {
           actorType: "human",
           action: `Sent provisional surplus alert to ${eligible.length} partners`,
           reason: "AI Copilot drafted alert, human approved sending",
+          reversible: true,
+        }),
+      };
+    }
+    case "CANCEL_PROVISIONAL_ALERTS": {
+      if (!guardRole(state, "CANCEL_PROVISIONAL_ALERTS")) {
+        return denied(state, "CANCEL_PROVISIONAL_ALERTS", "Requires manager or administrator role.");
+      }
+      if (!state.audit.some((a) => a.action.startsWith("Sent provisional surplus alert"))) {
+        return state;
+      }
+      if (state.audit.some((a) => a.action === "Cancelled provisional alerts")) {
+        return state;
+      }
+      return {
+        ...state,
+        audit: withAudit(state, {
+          actor: ACTOR_NAMES[state.role],
+          actorType: "human",
+          action: "Cancelled provisional alerts",
+          reason: "Human cancelled provisional partner notifications",
           reversible: true,
         }),
       };

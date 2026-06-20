@@ -26,6 +26,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiForecastRouteImport } from './routes/api/forecast'
 import { Route as ApiForecastWhatIfRouteImport } from './routes/api/forecast/what-if'
 import { Route as ApiForecastHealthRouteImport } from './routes/api/forecast/health'
+import { Route as ApiCopilotStateRouteImport } from './routes/api/copilot/state'
+import { Route as ApiCopilotSessionRouteImport } from './routes/api/copilot/session'
+import { Route as ApiCopilotResetRouteImport } from './routes/api/copilot/reset'
+import { Route as ApiCopilotMessageRouteImport } from './routes/api/copilot/message'
+import { Route as ApiCopilotHealthRouteImport } from './routes/api/copilot/health'
+import { Route as ApiCopilotProposalsProposalIdRejectRouteImport } from './routes/api/copilot/proposals/$proposalId/reject'
+import { Route as ApiCopilotProposalsProposalIdApproveRouteImport } from './routes/api/copilot/proposals/$proposalId/approve'
 
 const RecoveryRoute = RecoveryRouteImport.update({
   id: '/recovery',
@@ -112,6 +119,43 @@ const ApiForecastHealthRoute = ApiForecastHealthRouteImport.update({
   path: '/health',
   getParentRoute: () => ApiForecastRoute,
 } as any)
+const ApiCopilotStateRoute = ApiCopilotStateRouteImport.update({
+  id: '/api/copilot/state',
+  path: '/api/copilot/state',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotSessionRoute = ApiCopilotSessionRouteImport.update({
+  id: '/api/copilot/session',
+  path: '/api/copilot/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotResetRoute = ApiCopilotResetRouteImport.update({
+  id: '/api/copilot/reset',
+  path: '/api/copilot/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotMessageRoute = ApiCopilotMessageRouteImport.update({
+  id: '/api/copilot/message',
+  path: '/api/copilot/message',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotHealthRoute = ApiCopilotHealthRouteImport.update({
+  id: '/api/copilot/health',
+  path: '/api/copilot/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotProposalsProposalIdRejectRoute =
+  ApiCopilotProposalsProposalIdRejectRouteImport.update({
+    id: '/api/copilot/proposals/$proposalId/reject',
+    path: '/api/copilot/proposals/$proposalId/reject',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCopilotProposalsProposalIdApproveRoute =
+  ApiCopilotProposalsProposalIdApproveRouteImport.update({
+    id: '/api/copilot/proposals/$proposalId/approve',
+    path: '/api/copilot/proposals/$proposalId/approve',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -129,8 +173,15 @@ export interface FileRoutesByFullPath {
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
   '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/copilot/health': typeof ApiCopilotHealthRoute
+  '/api/copilot/message': typeof ApiCopilotMessageRoute
+  '/api/copilot/reset': typeof ApiCopilotResetRoute
+  '/api/copilot/session': typeof ApiCopilotSessionRoute
+  '/api/copilot/state': typeof ApiCopilotStateRoute
   '/api/forecast/health': typeof ApiForecastHealthRoute
   '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
+  '/api/copilot/proposals/$proposalId/approve': typeof ApiCopilotProposalsProposalIdApproveRoute
+  '/api/copilot/proposals/$proposalId/reject': typeof ApiCopilotProposalsProposalIdRejectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,8 +199,15 @@ export interface FileRoutesByTo {
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
   '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/copilot/health': typeof ApiCopilotHealthRoute
+  '/api/copilot/message': typeof ApiCopilotMessageRoute
+  '/api/copilot/reset': typeof ApiCopilotResetRoute
+  '/api/copilot/session': typeof ApiCopilotSessionRoute
+  '/api/copilot/state': typeof ApiCopilotStateRoute
   '/api/forecast/health': typeof ApiForecastHealthRoute
   '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
+  '/api/copilot/proposals/$proposalId/approve': typeof ApiCopilotProposalsProposalIdApproveRoute
+  '/api/copilot/proposals/$proposalId/reject': typeof ApiCopilotProposalsProposalIdRejectRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,8 +226,15 @@ export interface FileRoutesById {
   '/radar': typeof RadarRoute
   '/recovery': typeof RecoveryRoute
   '/api/forecast': typeof ApiForecastRouteWithChildren
+  '/api/copilot/health': typeof ApiCopilotHealthRoute
+  '/api/copilot/message': typeof ApiCopilotMessageRoute
+  '/api/copilot/reset': typeof ApiCopilotResetRoute
+  '/api/copilot/session': typeof ApiCopilotSessionRoute
+  '/api/copilot/state': typeof ApiCopilotStateRoute
   '/api/forecast/health': typeof ApiForecastHealthRoute
   '/api/forecast/what-if': typeof ApiForecastWhatIfRoute
+  '/api/copilot/proposals/$proposalId/approve': typeof ApiCopilotProposalsProposalIdApproveRoute
+  '/api/copilot/proposals/$proposalId/reject': typeof ApiCopilotProposalsProposalIdRejectRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,8 +254,15 @@ export interface FileRouteTypes {
     | '/radar'
     | '/recovery'
     | '/api/forecast'
+    | '/api/copilot/health'
+    | '/api/copilot/message'
+    | '/api/copilot/reset'
+    | '/api/copilot/session'
+    | '/api/copilot/state'
     | '/api/forecast/health'
     | '/api/forecast/what-if'
+    | '/api/copilot/proposals/$proposalId/approve'
+    | '/api/copilot/proposals/$proposalId/reject'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,8 +280,15 @@ export interface FileRouteTypes {
     | '/radar'
     | '/recovery'
     | '/api/forecast'
+    | '/api/copilot/health'
+    | '/api/copilot/message'
+    | '/api/copilot/reset'
+    | '/api/copilot/session'
+    | '/api/copilot/state'
     | '/api/forecast/health'
     | '/api/forecast/what-if'
+    | '/api/copilot/proposals/$proposalId/approve'
+    | '/api/copilot/proposals/$proposalId/reject'
   id:
     | '__root__'
     | '/'
@@ -227,8 +306,15 @@ export interface FileRouteTypes {
     | '/radar'
     | '/recovery'
     | '/api/forecast'
+    | '/api/copilot/health'
+    | '/api/copilot/message'
+    | '/api/copilot/reset'
+    | '/api/copilot/session'
+    | '/api/copilot/state'
     | '/api/forecast/health'
     | '/api/forecast/what-if'
+    | '/api/copilot/proposals/$proposalId/approve'
+    | '/api/copilot/proposals/$proposalId/reject'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -247,6 +333,13 @@ export interface RootRouteChildren {
   RadarRoute: typeof RadarRoute
   RecoveryRoute: typeof RecoveryRoute
   ApiForecastRoute: typeof ApiForecastRouteWithChildren
+  ApiCopilotHealthRoute: typeof ApiCopilotHealthRoute
+  ApiCopilotMessageRoute: typeof ApiCopilotMessageRoute
+  ApiCopilotResetRoute: typeof ApiCopilotResetRoute
+  ApiCopilotSessionRoute: typeof ApiCopilotSessionRoute
+  ApiCopilotStateRoute: typeof ApiCopilotStateRoute
+  ApiCopilotProposalsProposalIdApproveRoute: typeof ApiCopilotProposalsProposalIdApproveRoute
+  ApiCopilotProposalsProposalIdRejectRoute: typeof ApiCopilotProposalsProposalIdRejectRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -370,6 +463,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiForecastHealthRouteImport
       parentRoute: typeof ApiForecastRoute
     }
+    '/api/copilot/state': {
+      id: '/api/copilot/state'
+      path: '/api/copilot/state'
+      fullPath: '/api/copilot/state'
+      preLoaderRoute: typeof ApiCopilotStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/session': {
+      id: '/api/copilot/session'
+      path: '/api/copilot/session'
+      fullPath: '/api/copilot/session'
+      preLoaderRoute: typeof ApiCopilotSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/reset': {
+      id: '/api/copilot/reset'
+      path: '/api/copilot/reset'
+      fullPath: '/api/copilot/reset'
+      preLoaderRoute: typeof ApiCopilotResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/message': {
+      id: '/api/copilot/message'
+      path: '/api/copilot/message'
+      fullPath: '/api/copilot/message'
+      preLoaderRoute: typeof ApiCopilotMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/health': {
+      id: '/api/copilot/health'
+      path: '/api/copilot/health'
+      fullPath: '/api/copilot/health'
+      preLoaderRoute: typeof ApiCopilotHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/proposals/$proposalId/reject': {
+      id: '/api/copilot/proposals/$proposalId/reject'
+      path: '/api/copilot/proposals/$proposalId/reject'
+      fullPath: '/api/copilot/proposals/$proposalId/reject'
+      preLoaderRoute: typeof ApiCopilotProposalsProposalIdRejectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot/proposals/$proposalId/approve': {
+      id: '/api/copilot/proposals/$proposalId/approve'
+      path: '/api/copilot/proposals/$proposalId/approve'
+      fullPath: '/api/copilot/proposals/$proposalId/approve'
+      preLoaderRoute: typeof ApiCopilotProposalsProposalIdApproveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -403,6 +545,15 @@ const rootRouteChildren: RootRouteChildren = {
   RadarRoute: RadarRoute,
   RecoveryRoute: RecoveryRoute,
   ApiForecastRoute: ApiForecastRouteWithChildren,
+  ApiCopilotHealthRoute: ApiCopilotHealthRoute,
+  ApiCopilotMessageRoute: ApiCopilotMessageRoute,
+  ApiCopilotResetRoute: ApiCopilotResetRoute,
+  ApiCopilotSessionRoute: ApiCopilotSessionRoute,
+  ApiCopilotStateRoute: ApiCopilotStateRoute,
+  ApiCopilotProposalsProposalIdApproveRoute:
+    ApiCopilotProposalsProposalIdApproveRoute,
+  ApiCopilotProposalsProposalIdRejectRoute:
+    ApiCopilotProposalsProposalIdRejectRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -24,6 +24,7 @@ import { Logo } from "../brand/Logo";
 import { useStore } from "../../lib/store";
 import { CopilotDrawer } from "./CopilotDrawer";
 import { GuidedDemo } from "./GuidedDemo";
+import { resetCopilotIntegration } from "../../lib/copilot-client";
 import type { Role } from "../../lib/types";
 import { formatFocusDateLong } from "../../lib/demo-date";
 
@@ -173,7 +174,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <GuidedDemo />
 
             <button
-              onClick={() => dispatch({ type: "RESET" })}
+              onClick={() => {
+                void resetCopilotIntegration();
+                dispatch({ type: "RESET" });
+              }}
               className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-soft)]"
             >
               <RefreshCw size={11} /> Reset demo

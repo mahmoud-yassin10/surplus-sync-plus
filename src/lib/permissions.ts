@@ -5,6 +5,7 @@ export type ConsequentialAction =
   | "SET_PLAN"
   | "CORRECT_ATTENDANCE"
   | "SEND_PROVISIONAL_ALERTS"
+  | "CANCEL_PROVISIONAL_ALERTS"
   | "CONFIRM_SURPLUS"
   | "COMPLETE_CHECKLIST"
   | "SELECT_PARTNER"
@@ -19,6 +20,7 @@ const ACTION_ROLES: Record<ConsequentialAction, Role[]> = {
   SET_PLAN: ["manager"],
   CORRECT_ATTENDANCE: ["manager", "admin"],
   SEND_PROVISIONAL_ALERTS: ["manager", "admin"],
+  CANCEL_PROVISIONAL_ALERTS: ["manager", "admin"],
   CONFIRM_SURPLUS: ["manager", "admin"],
   COMPLETE_CHECKLIST: ["manager", "admin"],
   SELECT_PARTNER: ["manager", "admin"],
