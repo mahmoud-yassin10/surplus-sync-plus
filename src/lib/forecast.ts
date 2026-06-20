@@ -1,4 +1,4 @@
-import type { Forecast, ForecastView, HorizonDay, RecoveryPartner } from "./types";
+import type { Forecast, ForecastView, HorizonDay, ImpactRecord, RecoveryPartner } from "./types";
 import {
   DEMO_FOCUS_DATE,
   formatFocusDateLong,
@@ -9,6 +9,19 @@ import { SCHOOL } from "./mock";
 
 export const SAFETY_FLOOR = 540;
 export const MEAL_UNIT_COST = 3.4;
+export const REFED_MEAL_WEIGHT_LB = 1.2;
+export const KG_PER_LB = 0.45359237;
+export const ESTIMATED_CO2E_KG_PER_KG_FOOD = 1.837;
+export const CARBON_LEDGER_SOURCES = [
+  {
+    label: "ReFED Impact Calculator meals recovered methodology",
+    url: "https://docs.refed.org/methodologies/impact_calculator/meals_recovered.html",
+  },
+  {
+    label: "ReFED food waste climate reduction scenario",
+    url: "https://refed.org/articles/fighting-climate-change-by-investing-in-food-waste-reduction/",
+  },
+] as const;
 
 export const SCENARIO_PLANS = [
   { id: "current", label: "Current school plan", meals: SCHOOL.normalPrep },
@@ -60,8 +73,26 @@ export function computePreventedImpact(
   return { preventedMeals, costSaved: preventedMeals * MEAL_UNIT_COST };
 }
 
+export function estimateCarbonKgForMeals(meals: number): number {
+  return Math.round(meals * REFED_MEAL_WEIGHT_LB * KG_PER_LB * ESTIMATED_CO2E_KG_PER_KG_FOOD);
+}
+
+export function estimateCarbonLedger(impact: ImpactRecord): {
+  avoidedKgCO2e: number;
+  basisMeals: number;
+  methodology: string;
+} {
+  const basisMeals = impact.preventedMeals + impact.recoveredMeals;
+  return {
+    avoidedKgCO2e: estimateCarbonKgForMeals(basisMeals),
+    basisMeals,
+    methodology:
+      "This estimate uses 1.2 lb per recovered meal and an approximate ReFED scenario ratio of 75 MMT CO2e reduced per 45M tons of food waste diverted.",
+  };
+}
+
 export type ImpactCategoryDisclosure = {
-  title: "Prevented" | "Recovered" | "Nonrecoverable" | "Forecast accuracy";
+  title: "Prevented" | "Recovered" | "Nonrecoverable" | "Forecast accuracy" | "Carbon estimate";
   desc: string;
 };
 
@@ -311,6 +342,10 @@ export function impactCategoryDisclosures(view: ForecastView): ImpactCategoryDis
     {
       title: "Forecast accuracy",
       desc: "Rolling 30-day mean absolute percentage error of attendance prediction. Updated nightly.",
+    },
+    {
+      title: "Carbon estimate",
+      desc: "Estimated kg CO2e avoided from prevented plus recovered meals. Not audited carbon accounting.",
     },
   ];
 }

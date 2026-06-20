@@ -5,6 +5,8 @@ import { CountUp } from "../components/shell/motion";
 import { TiltCard } from "../components/shell/TiltCard";
 import { useStore } from "../lib/store";
 import {
+  CARBON_LEDGER_SOURCES,
+  estimateCarbonLedger,
   forecastViewFromState,
   impactCategoryDisclosures,
   preventedMealsDerivation,
@@ -19,6 +21,7 @@ function Impact() {
   const { state } = useStore();
   const i = state.impact;
   const view = forecastViewFromState(state);
+  const carbon = estimateCarbonLedger(i);
 
   return (
     <Page kicker="Impact ledger" title="Prevented · recovered · wasted">
@@ -56,8 +59,8 @@ function Impact() {
           value={<CountUp value={Math.round(i.costSaved)} prefix="$" />}
         />
         <Small
-          label="Forecast accuracy"
-          value={<CountUp value={i.forecastAccuracy * 100} decimals={1} suffix="%" />}
+          label="Est. CO2e avoided"
+          value={<CountUp value={carbon.avoidedKgCO2e} suffix=" kg" />}
         />
         <Small label="Pickups completed" value={<CountUp value={i.pickupsCompleted} />} />
       </div>
@@ -75,8 +78,14 @@ function Impact() {
 
       <div className="mt-5 rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)]/40 p-3 text-[11.5px] text-[var(--color-text-soft)] flex gap-2">
         <Sparkles size={13} className="text-[var(--color-warning)] mt-0.5" />
-        All numbers above are prototype demonstration data, tracked locally for this session. Reset
-        Demo restores the original state.
+        <div>
+          All numbers above are prototype demonstration data, tracked locally for this session. The
+          carbon figure is an estimate, not audited carbon accounting, based on {carbon.basisMeals}{" "}
+          prevented or recovered meals and public ReFED methodology.
+          <div className="mt-1">
+            Sources: {CARBON_LEDGER_SOURCES.map((source) => source.label).join("; ")}.
+          </div>
+        </div>
       </div>
     </Page>
   );
