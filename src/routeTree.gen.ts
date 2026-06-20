@@ -9,8 +9,86 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RecoveryRouteImport } from './routes/recovery'
+import { Route as RadarRouteImport } from './routes/radar'
+import { Route as PickupsRouteImport } from './routes/pickups'
+import { Route as PartnerRouteImport } from './routes/partner'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as MealsRouteImport } from './routes/meals'
+import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as ForecastRouteImport } from './routes/forecast'
+import { Route as DecisionRouteImport } from './routes/decision'
+import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as AuditRouteImport } from './routes/audit'
+import { Route as AttendanceRouteImport } from './routes/attendance'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RecoveryRoute = RecoveryRouteImport.update({
+  id: '/recovery',
+  path: '/recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RadarRoute = RadarRouteImport.update({
+  id: '/radar',
+  path: '/radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PickupsRoute = PickupsRouteImport.update({
+  id: '/pickups',
+  path: '/pickups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MealsRoute = MealsRouteImport.update({
+  id: '/meals',
+  path: '/meals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactRoute = ImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForecastRoute = ForecastRouteImport.update({
+  id: '/forecast',
+  path: '/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecisionRoute = DecisionRouteImport.update({
+  id: '/decision',
+  path: '/decision',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRoute = AttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +97,214 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/attendance': typeof AttendanceRoute
+  '/audit': typeof AuditRoute
+  '/calendar': typeof CalendarRoute
+  '/decision': typeof DecisionRoute
+  '/forecast': typeof ForecastRoute
+  '/impact': typeof ImpactRoute
+  '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
+  '/partner': typeof PartnerRoute
+  '/pickups': typeof PickupsRoute
+  '/radar': typeof RadarRoute
+  '/recovery': typeof RecoveryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/attendance'
+    | '/audit'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/impact'
+    | '/meals'
+    | '/messages'
+    | '/partner'
+    | '/pickups'
+    | '/radar'
+    | '/recovery'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/attendance'
+    | '/audit'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/impact'
+    | '/meals'
+    | '/messages'
+    | '/partner'
+    | '/pickups'
+    | '/radar'
+    | '/recovery'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/attendance'
+    | '/audit'
+    | '/calendar'
+    | '/decision'
+    | '/forecast'
+    | '/impact'
+    | '/meals'
+    | '/messages'
+    | '/partner'
+    | '/pickups'
+    | '/radar'
+    | '/recovery'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AttendanceRoute: typeof AttendanceRoute
+  AuditRoute: typeof AuditRoute
+  CalendarRoute: typeof CalendarRoute
+  DecisionRoute: typeof DecisionRoute
+  ForecastRoute: typeof ForecastRoute
+  ImpactRoute: typeof ImpactRoute
+  MealsRoute: typeof MealsRoute
+  MessagesRoute: typeof MessagesRoute
+  PartnerRoute: typeof PartnerRoute
+  PickupsRoute: typeof PickupsRoute
+  RadarRoute: typeof RadarRoute
+  RecoveryRoute: typeof RecoveryRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/recovery': {
+      id: '/recovery'
+      path: '/recovery'
+      fullPath: '/recovery'
+      preLoaderRoute: typeof RecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/radar': {
+      id: '/radar'
+      path: '/radar'
+      fullPath: '/radar'
+      preLoaderRoute: typeof RadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pickups': {
+      id: '/pickups'
+      path: '/pickups'
+      fullPath: '/pickups'
+      preLoaderRoute: typeof PickupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meals': {
+      id: '/meals'
+      path: '/meals'
+      fullPath: '/meals'
+      preLoaderRoute: typeof MealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impact': {
+      id: '/impact'
+      path: '/impact'
+      fullPath: '/impact'
+      preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forecast': {
+      id: '/forecast'
+      path: '/forecast'
+      fullPath: '/forecast'
+      preLoaderRoute: typeof ForecastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decision': {
+      id: '/decision'
+      path: '/decision'
+      fullPath: '/decision'
+      preLoaderRoute: typeof DecisionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/attendance': {
+      id: '/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +317,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AttendanceRoute: AttendanceRoute,
+  AuditRoute: AuditRoute,
+  CalendarRoute: CalendarRoute,
+  DecisionRoute: DecisionRoute,
+  ForecastRoute: ForecastRoute,
+  ImpactRoute: ImpactRoute,
+  MealsRoute: MealsRoute,
+  MessagesRoute: MessagesRoute,
+  PartnerRoute: PartnerRoute,
+  PickupsRoute: PickupsRoute,
+  RadarRoute: RadarRoute,
+  RecoveryRoute: RecoveryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,0 +1,212 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import {
+  Activity,
+  AlertCircle,
+  Calendar,
+  ClipboardList,
+  Compass,
+  Database,
+  Gauge,
+  History,
+  LayoutDashboard,
+  MessageSquare,
+  Network,
+  Radar,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  Users,
+  Utensils,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Logo } from "../brand/Logo";
+import { useStore } from "../../lib/store";
+import { CopilotDrawer } from "./CopilotDrawer";
+import { GuidedDemo } from "./GuidedDemo";
+import type { Role } from "../../lib/types";
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles: Role[];
+}
+
+const NAV: NavItem[] = [
+  { to: "/", label: "Command Center", icon: LayoutDashboard, roles: ["manager", "admin"] },
+  { to: "/forecast", label: "Daily Forecast", icon: Gauge, roles: ["manager", "admin"] },
+  { to: "/radar", label: "Surplus Radar", icon: Radar, roles: ["manager", "admin"] },
+  { to: "/decision", label: "Decision Canvas", icon: Compass, roles: ["manager", "admin"] },
+  { to: "/calendar", label: "Calendar", icon: Calendar, roles: ["manager", "admin"] },
+  { to: "/attendance", label: "Attendance", icon: Users, roles: ["manager", "admin"] },
+  { to: "/meals", label: "Meal History", icon: Utensils, roles: ["manager", "admin"] },
+  { to: "/recovery", label: "Recovery Network", icon: Network, roles: ["manager", "admin"] },
+  { to: "/messages", label: "Messages", icon: MessageSquare, roles: ["manager", "admin", "partner"] },
+  { to: "/pickups", label: "Pickups", icon: Truck, roles: ["manager", "admin", "partner"] },
+  { to: "/impact", label: "Impact Ledger", icon: Activity, roles: ["manager", "admin", "platform"] },
+  { to: "/audit", label: "Audit", icon: History, roles: ["manager", "admin", "platform"] },
+  { to: "/partner", label: "Partner Portal", icon: ClipboardList, roles: ["partner"] },
+  { to: "/admin", label: "Network Admin", icon: ShieldCheck, roles: ["platform"] },
+];
+
+const ROLES: { id: Role; label: string }[] = [
+  { id: "manager", label: "Cafeteria Manager" },
+  { id: "admin", label: "School Administrator" },
+  { id: "partner", label: "Recovery Partner" },
+  { id: "platform", label: "Platform Admin" },
+];
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const { state, dispatch } = useStore();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const items = NAV.filter((n) => n.roles.includes(state.role));
+
+  return (
+    <div className="min-h-screen flex bg-[var(--color-canvas)] text-[var(--color-text)]">
+      <aside className="hidden md:flex w-[232px] shrink-0 flex-col bg-[var(--color-ink)] text-[var(--color-sidebar-foreground)] border-r border-[var(--color-sidebar-border)]">
+        <div className="px-5 py-5 border-b border-white/5 flex items-center gap-2">
+          <Logo size={26} />
+          <div className="leading-tight">
+            <div className="text-[13.5px] font-semibold tracking-tight">SurplusSync<span className="text-[var(--color-ai)]"> Plus</span></div>
+            <div className="text-[9.5px] uppercase tracking-[0.18em] text-white/45">Predict · Prevent · Recover</div>
+          </div>
+        </div>
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          {items.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition ${
+                  active ? "bg-white/10 text-white" : "text-white/65 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <Icon size={15} strokeWidth={1.8} />
+                <span>{item.label}</span>
+                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--color-ai)]" />}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="px-3 py-3 border-t border-white/5">
+          <div className="rounded-md bg-white/5 p-2.5 text-[11px] text-white/70">
+            <div className="flex items-center gap-1.5 text-white/55 uppercase tracking-wider text-[9.5px] mb-1">
+              <Database size={11} /> Prototype demo data
+            </div>
+            Lincoln Heights HS · Chicago, IL
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="h-14 border-b border-[var(--color-line)] bg-[var(--color-surface)]/90 backdrop-blur px-4 md:px-6 flex items-center gap-3 sticky top-0 z-30">
+          <div className="flex items-center gap-2 text-[13px] min-w-0">
+            <span className="font-medium text-[var(--color-text)] truncate">Lincoln Heights HS</span>
+            <span className="text-[var(--color-text-faint)]">·</span>
+            <span className="text-[var(--color-text-soft)] truncate">Thu Mar 12, 2026</span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className={`hidden sm:inline-flex text-[11px] px-2 py-1 rounded-md border tnum items-center gap-1.5 ${
+              state.aiMode
+                ? "border-[var(--color-ai)]/25 bg-[var(--color-ai-soft)] text-[var(--color-ai)]"
+                : "border-[var(--color-manual)]/30 bg-[var(--color-surface-2)] text-[var(--color-manual)]"
+            }`}>
+              {state.aiMode ? <><Sparkles size={11} /> AI assist on</> : <><AlertCircle size={11} /> Manual mode</>}
+            </span>
+            <button onClick={() => dispatch({ type: "TOGGLE_AI" })} className="text-[11px] px-2 py-1 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-soft)]">Toggle</button>
+
+            <select
+              value={state.role}
+              onChange={(e) => dispatch({ type: "SET_ROLE", role: e.target.value as Role })}
+              className="text-[12px] px-2.5 py-1.5 rounded-md border border-[var(--color-line)] bg-[var(--color-surface)] text-[var(--color-text)]"
+              aria-label="Active role"
+            >
+              {ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            </select>
+
+            <GuidedDemo />
+
+            <button onClick={() => dispatch({ type: "RESET" })} className="text-[11px] flex items-center gap-1 px-2 py-1 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)] text-[var(--color-text-soft)]">
+              <RefreshCw size={11} /> Reset demo
+            </button>
+
+            <button onClick={() => setCopilotOpen((o) => !o)} className="text-[12px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--color-ai)] text-white hover:opacity-95">
+              <Sparkles size={13} /> Copilot
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 min-w-0">{children}</main>
+      </div>
+
+      <CopilotDrawer open={copilotOpen} onClose={() => setCopilotOpen(false)} />
+    </div>
+  );
+}
+
+export function Page({ title, kicker, actions, children }: { title: string; kicker?: string; actions?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="max-w-[1400px] mx-auto px-4 md:px-6 lg:px-8 py-6 lg:py-8">
+      <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="min-w-0">
+          {kicker && <div className="text-[10.5px] uppercase tracking-[0.16em] text-[var(--color-text-faint)] mb-1">{kicker}</div>}
+          <h1 className="text-[22px] font-semibold tracking-tight text-[var(--color-text)]">{title}</h1>
+        </div>
+        {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export function Section({ title, hint, right, children, className = "", padded = false }: { title?: string; hint?: string; right?: ReactNode; children: ReactNode; className?: string; padded?: boolean }) {
+  return (
+    <section className={`rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] ${className}`}>
+      {(title || right) && (
+        <header className="px-4 py-3 border-b border-[var(--color-line)] flex items-center gap-3">
+          <div className="min-w-0">
+            {title && <h2 className="text-[13px] font-semibold tracking-tight text-[var(--color-text)]">{title}</h2>}
+            {hint && <p className="text-[11.5px] text-[var(--color-text-faint)] mt-0.5">{hint}</p>}
+          </div>
+          {right && <div className="ml-auto">{right}</div>}
+        </header>
+      )}
+      <div className={padded ? "p-4" : ""}>{children}</div>
+    </section>
+  );
+}
+
+export function RiskPill({ level }: { level: "low" | "moderate" | "high" | "critical" }) {
+  const map = {
+    low: ["bg-[var(--color-success-soft)]", "text-[var(--color-success)]", "Low"],
+    moderate: ["bg-[var(--color-warning-soft)]", "text-[var(--color-warning)]", "Moderate"],
+    high: ["bg-[var(--color-critical-soft)]", "text-[var(--color-critical)]", "High"],
+    critical: ["bg-[var(--color-critical-soft)]", "text-[var(--color-critical)]", "Critical"],
+  } as const;
+  const [bg, fg, label] = map[level];
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium ${bg} ${fg}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      {label} risk
+    </span>
+  );
+}
+
+export function StatLabel({ children }: { children: ReactNode }) {
+  return <div className="text-[10.5px] uppercase tracking-[0.14em] text-[var(--color-text-faint)]">{children}</div>;
+}
+
+export function StatValue({ children, unit, tone }: { children: ReactNode; unit?: string; tone?: "ai" | "critical" | "success" | "warning" }) {
+  const color = tone === "ai" ? "text-[var(--color-ai)]" : tone === "critical" ? "text-[var(--color-critical)]" : tone === "success" ? "text-[var(--color-success)]" : tone === "warning" ? "text-[var(--color-warning)]" : "";
+  return (
+    <div className="flex items-baseline gap-1 tnum">
+      <span className={`text-[22px] font-semibold tracking-tight ${color}`}>{children}</span>
+      {unit && <span className="text-[11px] text-[var(--color-text-faint)]">{unit}</span>}
+    </div>
+  );
+}
