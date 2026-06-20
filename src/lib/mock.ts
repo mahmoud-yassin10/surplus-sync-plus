@@ -3,6 +3,7 @@ import type {
   AuditEvent,
   CalendarEvent,
   Forecast,
+  HorizonDay,
   ImpactRecord,
   MealRecord,
   Message,
@@ -10,6 +11,12 @@ import type {
   RecoveryPartner,
   School,
 } from "./types";
+import { DEMO_FOCUS_DATE, DEMO_TODAY } from "./demo-date";
+
+/** @deprecated Use DEMO_TODAY from demo-date.ts */
+export const TODAY = DEMO_TODAY;
+/** @deprecated Use DEMO_FOCUS_DATE from demo-date.ts */
+export const FOCUS_DATE = DEMO_FOCUS_DATE;
 
 export const SCHOOL: School = {
   id: "lhphs",
@@ -23,29 +30,13 @@ export const SCHOOL: School = {
   admin: "Daniel Brooks",
 };
 
-// Anchor "today" so the prototype reads consistently. Thursday is the focus day.
-export const TODAY = "2026-03-09"; // Monday
-export const FOCUS_DATE = "2026-03-12"; // Thursday
-
 function d(offset: number): string {
   const base = new Date(TODAY + "T12:00:00Z");
   base.setUTCDate(base.getUTCDate() + offset);
   return base.toISOString().slice(0, 10);
 }
 
-export const HORIZON_DAYS: {
-  date: string;
-  label: string;
-  weekday: string;
-  attendance: number;
-  intervalLow: number;
-  intervalHigh: number;
-  recommendedPrep: number;
-  currentPlan: number;
-  preventable: number;
-  risk: "low" | "moderate" | "high" | "critical";
-  events: string[];
-}[] = [
+export const HORIZON_DAYS: HorizonDay[] = [
   { date: d(0), label: "Mon", weekday: "Monday", attendance: 712, intervalLow: 695, intervalHigh: 728, recommendedPrep: 738, currentPlan: 730, preventable: 0, risk: "low", events: [] },
   { date: d(1), label: "Tue", weekday: "Tuesday", attendance: 705, intervalLow: 686, intervalHigh: 722, recommendedPrep: 732, currentPlan: 730, preventable: 0, risk: "low", events: [] },
   { date: d(2), label: "Wed", weekday: "Wednesday", attendance: 690, intervalLow: 668, intervalHigh: 712, recommendedPrep: 728, currentPlan: 730, preventable: 5, risk: "low", events: ["exam"] },

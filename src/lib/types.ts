@@ -82,6 +82,51 @@ export interface Forecast {
   similarDays: { date: string; attendance: number; note: string }[];
 }
 
+export interface HorizonDay {
+  date: string;
+  label: string;
+  weekday: string;
+  attendance: number;
+  intervalLow: number;
+  intervalHigh: number;
+  recommendedPrep: number;
+  currentPlan: number;
+  preventable: number;
+  risk: "low" | "moderate" | "high" | "critical";
+  events: string[];
+}
+
+export interface ForecastView {
+  date: string;
+  focusDateLong: string;
+  focusDateShort: string;
+  focusDateSlash: string;
+  expectedAttendance: number;
+  intervalLow: number;
+  intervalHigh: number;
+  intervalLabel: string;
+  recommendedPrep: number;
+  currentPlan: number;
+  baselinePrep: number;
+  preventableSurplus: number;
+  shortageProb: number;
+  largeSurplusProb: number;
+  safetyFloor: number;
+  safetyBuffer: number;
+  maxSafeReduction: number;
+  planDelta: number;
+  risk: Forecast["risk"];
+  modelVersion: string;
+  recommendationKey: string;
+  approvedForCurrentRecommendation: boolean;
+  attendanceCorrected: boolean;
+  scenarioRows: { id: string; label: string; meals: number; shortage: number; waste: number }[];
+  influences: Forecast["influences"];
+  similarDays: Forecast["similarDays"];
+  menu: Forecast["menu"];
+  dataQuality: Forecast["dataQuality"];
+}
+
 export type PartnerStatus = "available" | "limited" | "unavailable" | "closed";
 
 export interface RecoveryPartner {
@@ -130,6 +175,7 @@ export interface Pickup {
   eta: string;
   driver?: string;
   createdAt: string;
+  impactRecorded?: boolean;
 }
 
 export interface AuditEvent {
