@@ -25,6 +25,7 @@ import { useStore } from "../../lib/store";
 import { CopilotDrawer } from "./CopilotDrawer";
 import { GuidedDemo } from "./GuidedDemo";
 import type { Role } from "../../lib/types";
+import { formatFocusDateLong } from "../../lib/demo-date";
 
 interface NavItem {
   to: string;
@@ -107,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2 text-[13px] min-w-0">
             <span className="font-medium text-[var(--color-text)] truncate">Lincoln Heights HS</span>
             <span className="text-[var(--color-text-faint)]">·</span>
-            <span className="text-[var(--color-text-soft)] truncate">Thu Mar 12, 2026</span>
+            <span className="text-[var(--color-text-soft)] truncate">{formatFocusDateLong()}</span>
           </div>
 
           <div className="ml-auto flex items-center gap-2">

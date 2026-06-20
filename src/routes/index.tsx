@@ -4,6 +4,9 @@ import { Page, RiskPill, Section, StatLabel, StatValue } from "../components/she
 import { HorizonRibbon } from "../components/forecast/HorizonRibbon";
 import { EvidenceTrigger } from "../components/forecast/EvidenceDrawer";
 import { useStore } from "../lib/store";
+import { forecastViewFromState, syncHorizonFocusDay } from "../lib/forecast";
+import { HORIZON_DAYS } from "../lib/mock";
+import { canPerform } from "../lib/permissions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,16 +20,17 @@ export const Route = createFileRoute("/")({
 
 function CommandCenter() {
   const { state, dispatch } = useStore();
+  const view = forecastViewFromState(state);
   const f = state.forecast;
-  const planDelta = state.currentPlan - f.recommendedPrep;
+  const horizon = syncHorizonFocusDay(HORIZON_DAYS, f, state.currentPlan);
 
   return (
-    <Page kicker="School Command Center" title="Thursday Mar 12 is a high-risk surplus event">
+    <Page kicker="School Command Center" title={`${view.focusDateShort} is a high-risk surplus event`}>
       {/* Operational strip */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5">
         <Strip label="Risk" value={<RiskPill level={f.risk} />} note="Preventable surplus > 100 meals" />
         <Strip label="Current plan" value={<span className="tnum text-[18px] font-semibold">{state.currentPlan}</span>} note="meals prepared" />
-        <Strip label="AI recommendation" value={<span className="tnum text-[18px] font-semibold text-[var(--color-ai)]">{f.recommendedPrep}</span>} note={state.approvedRecommendation ? "Approved" : `${planDelta > 0 ? `−${planDelta}` : `+${-planDelta}`} from plan`} />
+        <Strip label="AI recommendation" value={<span className="tnum text-[18px] font-semibold text-[var(--color-ai)]">{f.recommendedPrep}</span>} note={view.approvedForCurrentRecommendation ? "Approved" : `${view.planDelta > 0 ? `−${view.planDelta}` : `+${-view.planDelta}`} from plan`} />
         <Strip label="Shortage probability" value={<span className="tnum text-[18px] font-semibold">{(f.shortageProb * 100).toFixed(1)}%</span>} note="80% interval respected" />
         <Strip label="Last forecast" value={<span className="text-[13px] font-medium">06:02 today</span>} note={`Model ${f.modelVersion}`} />
       </div>
@@ -34,14 +38,14 @@ function CommandCenter() {
       {/* Forecast Horizon */}
       <div className="mb-5">
         <Section title="Forecast horizon" hint="Click a day to inspect its event signals" right={<EvidenceTrigger />}>
-          <HorizonRibbon selected={f.date} />
+          <HorizonRibbon selected={f.date} horizonDays={horizon} />
         </Section>
       </div>
 
       <div className="grid lg:grid-cols-[1.5fr_1fr] gap-5">
         {/* Left: event stack + plan comparison */}
         <div className="space-y-5">
-          <Section title="Thursday — event signal stack" hint="Inputs the model used to predict 528 students (interval 497–557)">
+          <Section title={`${view.focusDateShort} — event signal stack`} hint={`Inputs the model used to predict ${f.expectedAttendance} students (interval ${view.intervalLabel})`}>
             <ul className="divide-y divide-[var(--color-line)]">
               {f.influences.map((i) => (
                 <li key={i.factor} className="px-4 py-3 grid grid-cols-[20px_1fr_auto] gap-3 items-center">
@@ -58,15 +62,19 @@ function CommandCenter() {
 
           <Section title="Current plan vs AI recommendation" hint="Uncertainty shown as the 80% prediction interval">
             <div className="p-5">
-              <PlanComparison expected={f.expectedAttendance} low={f.intervalLow} high={f.intervalHigh} current={state.currentPlan} recommended={f.recommendedPrep} />
+              <PlanComparison expected={f.expectedAttendance} low={f.intervalLow} high={f.intervalHigh} current={state.currentPlan} recommended={f.recommendedPrep} safetyBuffer={view.safetyBuffer} />
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link to="/decision" className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white">Open Decision Canvas</Link>
-                {!state.approvedRecommendation && (
-                  <button onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5">
+                {!view.approvedForCurrentRecommendation && (
+                  <button
+                    disabled={!canPerform(state.role, "APPLY_RECOMMENDATION")}
+                    onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })}
+                    className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ai)] text-white flex items-center gap-1.5 disabled:opacity-40"
+                  >
                     <Sparkles size={12} /> Apply AI recommendation
                   </button>
                 )}
-                {state.approvedRecommendation && (
+                {view.approvedForCurrentRecommendation && (
                   <span className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success-soft)] text-[var(--color-success)] flex items-center gap-1.5">
                     <CheckCircle2 size={12} /> Recommendation approved by Maya
                   </span>
@@ -118,7 +126,7 @@ function CommandCenter() {
 
           <Section title="Copilot insight" right={<Sparkles size={13} className="text-[var(--color-ai)]" />}>
             <div className="p-4 text-[12.5px] text-[var(--color-text-soft)] leading-relaxed">
-              <p>Reducing Thursday preparation from <span className="text-[var(--color-text)] tnum">730 → 562</span> meals respects the safety floor of 540 and prevents an estimated <span className="text-[var(--color-critical)] tnum">168 meals</span> of overproduction.</p>
+              <p>Reducing Thursday preparation from <span className="text-[var(--color-text)] tnum">{view.baselinePrep} → {view.recommendedPrep}</span> meals respects the safety floor of {view.safetyFloor} and prevents an estimated <span className="text-[var(--color-critical)] tnum">{view.preventableSurplus} meals</span> of overproduction.</p>
               <p className="mt-2">Three available partners can absorb 60–95 packaged meals if any safe surplus remains after service.</p>
               <div className="mt-3 flex gap-2">
                 <EvidenceTrigger />
@@ -176,7 +184,7 @@ function Ledger({ label, value, sub, tone }: { label: string; value: any; sub: s
   );
 }
 
-function PlanComparison({ expected, low, high, current, recommended }: { expected: number; low: number; high: number; current: number; recommended: number }) {
+function PlanComparison({ expected, low, high, current, recommended, safetyBuffer }: { expected: number; low: number; high: number; current: number; recommended: number; safetyBuffer: number }) {
   const min = 450, max = 800;
   const pct = (v: number) => `${((v - min) / (max - min)) * 100}%`;
   return (
@@ -196,7 +204,7 @@ function PlanComparison({ expected, low, high, current, recommended }: { expecte
       </div>
       <div className="mt-3 flex items-start gap-2 text-[11.5px] text-[var(--color-text-soft)]">
         <TriangleAlert size={13} className="text-[var(--color-warning)] mt-0.5 shrink-0" />
-        <span>The 80% interval is the plausible attendance range. The recommendation sits 34 meals above the upper bound for safety.</span>
+        <span>The 80% interval is the plausible attendance range. The recommendation sits {safetyBuffer} meals above the upper bound for safety.</span>
       </div>
     </div>
   );

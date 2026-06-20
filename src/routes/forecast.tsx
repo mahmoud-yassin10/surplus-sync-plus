@@ -3,6 +3,8 @@ import { CheckCircle2, ChevronRight, Sparkles, X } from "lucide-react";
 import { Page, Section, StatLabel } from "../components/shell/AppShell";
 import { EvidenceTrigger } from "../components/forecast/EvidenceDrawer";
 import { useStore } from "../lib/store";
+import { forecastViewFromState } from "../lib/forecast";
+import { canPerform } from "../lib/permissions";
 
 export const Route = createFileRoute("/forecast")({
   head: () => ({ meta: [{ title: "Daily forecast — SurplusSync Plus" }] }),
@@ -12,9 +14,10 @@ export const Route = createFileRoute("/forecast")({
 function Forecast() {
   const { state, dispatch } = useStore();
   const f = state.forecast;
+  const view = forecastViewFromState(state);
 
   return (
-    <Page kicker="Daily forecast" title={`Thursday Mar 12, 2026`}
+    <Page kicker="Daily forecast" title={view.focusDateLong}
       actions={<>
         <EvidenceTrigger />
         <Link to="/decision" className="text-[12px] px-3 py-1.5 rounded-md border border-[var(--color-line)]">Decision Canvas →</Link>
@@ -25,13 +28,13 @@ function Forecast() {
           <Section title="Demand forecast" hint={`Model ${f.modelVersion} · data quality ${f.dataQuality}`}>
             <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
               <Big label="Expected attendance" value={f.expectedAttendance} unit="students" />
-              <Big label="80% interval" value={`${f.intervalLow}–${f.intervalHigh}`} unit="students" />
+              <Big label="80% interval" value={view.intervalLabel} unit="students" />
               <Big label="Recommended prep" value={f.recommendedPrep} tone="ai" unit="meals" />
               <Big label="Shortage probability" value={`${(f.shortageProb * 100).toFixed(1)}%`} />
               <Big label="Preventable surplus" value={f.preventableSurplus} tone="critical" unit="meals" />
               <Big label="Large-surplus prob" value={`${(f.largeSurplusProb * 100).toFixed(0)}%`} />
-              <Big label="Safety buffer" value={`+${f.recommendedPrep - f.intervalHigh}`} unit="above 80% upper" />
-              <Big label="Max safe reduction" value={`${730 - 540}`} unit="meals" />
+              <Big label="Safety buffer" value={`+${view.safetyBuffer}`} unit="above 80% upper" />
+              <Big label="Max safe reduction" value={`${view.maxSafeReduction}`} unit="meals" />
             </div>
           </Section>
 
@@ -56,8 +59,12 @@ function Forecast() {
 
           <Section title="Actions" hint="The cafeteria manager retains final authority">
             <div className="p-4 flex flex-wrap gap-2">
-              {!state.approvedRecommendation ? (
-                <button onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1.5">
+              {!view.approvedForCurrentRecommendation ? (
+                <button
+                  disabled={!canPerform(state.role, "APPLY_RECOMMENDATION")}
+                  onClick={() => dispatch({ type: "APPLY_RECOMMENDATION" })}
+                  className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1.5 disabled:opacity-40"
+                >
                   <CheckCircle2 size={12} /> Approve {f.recommendedPrep} meals
                 </button>
               ) : (

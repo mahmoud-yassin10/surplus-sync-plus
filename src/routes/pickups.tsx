@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, ChevronRight, ShieldAlert, Truck } from "l
 import { Page, Section } from "../components/shell/AppShell";
 import { ApprovalGate } from "../components/approval/ApprovalGate";
 import { useStore } from "../lib/store";
+import { canPerform } from "../lib/permissions";
 import type { PickupStatus } from "../lib/types";
 
 export const Route = createFileRoute("/pickups")({
@@ -45,11 +46,15 @@ function Pickups() {
   const [checks, setChecks] = useState<Set<string>>(new Set());
   const pickup = state.pickups[0];
   const partner = pickup ? state.partners.find((p) => p.id === pickup.partnerId) : null;
+  const canManage = canPerform(state.role, "CONFIRM_SURPLUS");
+  const canAssign = canPerform(state.role, "SELECT_PARTNER");
+  const canOverride = canPerform(state.role, "OVERRIDE_PARTNER");
+  const canAdvance = canPerform(state.role, "ADVANCE_PICKUP");
+  const checklistDone = state.checklistComplete || checks.size === CHECKLIST.length;
 
   return (
     <Page kicker="Pickups & confirmation" title="Same-day surplus confirmation">
       <div className="grid lg:grid-cols-[1fr_1fr] gap-5">
-        {/* Confirm surplus */}
         <Section title="Confirm safe surplus" hint="After service · qualified human must complete the eligibility checklist">
           <div className="p-4 space-y-4">
             <div className="rounded-md border border-[var(--color-critical)]/30 bg-[var(--color-critical-soft)]/40 p-3 text-[11.5px] text-[var(--color-critical)] flex gap-2">
@@ -96,36 +101,49 @@ function Pickups() {
 
             <div className="flex gap-2 flex-wrap">
               <button
-                disabled={state.checklistComplete || checks.size < CHECKLIST.length}
-                onClick={() => { dispatch({ type: "CONFIRM_SURPLUS", meals: surplus }); dispatch({ type: "COMPLETE_CHECKLIST" }); }}
+                disabled={!canManage || state.surplusConfirmed != null}
+                onClick={() => dispatch({ type: "CONFIRM_SURPLUS", meals: surplus })}
                 className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-success)] text-white disabled:opacity-40 flex items-center gap-1.5"
               >
                 <CheckCircle2 size={12} /> Confirm {surplus} recoverable meals
               </button>
-              {state.checklistComplete && !pickup && (
-                <button onClick={() => dispatch({ type: "SELECT_PARTNER", partnerId: "p1", meals: surplus })} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white">Assign Metro Community Food Bank</button>
+              <button
+                disabled={!canManage || state.checklistComplete || !checklistDone}
+                onClick={() => dispatch({ type: "COMPLETE_CHECKLIST" })}
+                className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] disabled:opacity-40"
+              >
+                Complete checklist
+              </button>
+              {state.checklistComplete && state.surplusConfirmed != null && !pickup && (
+                <button
+                  disabled={!canAssign}
+                  onClick={() => dispatch({ type: "SELECT_PARTNER", partnerId: "p1", meals: state.surplusConfirmed! })}
+                  className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white disabled:opacity-40"
+                >
+                  Assign Metro Community Food Bank
+                </button>
               )}
             </div>
           </div>
         </Section>
 
-        {/* Partner override approval */}
         <Section title="Partner ranking" hint="AI proposes; human can override">
           <div className="p-4 space-y-3">
             <PartnerRow rank={1} name="Metro Community Food Bank" reason="Refrigerated van · 18 min response · 120 cap" picked={!!pickup && pickup.partnerId === "p1"} />
-            <PartnerRow rank={2} name="Neighborhood Community Kitchen" reason="Higher capacity but 42 min response" />
+            <PartnerRow rank={2} name="Neighborhood Community Kitchen" reason="Higher capacity but 42 min response" picked={!!pickup && pickup.partnerId === "p3"} />
             <PartnerRow rank={3} name="Harbor Family Shelter" reason="No vehicle — requires school delivery" />
 
-            {state.surplusConfirmed && (
+            {state.surplusConfirmed != null && pickup && (
               <ApprovalGate
                 title="Override AI partner ranking?"
                 who="Cafeteria Manager"
                 before="AI top choice: Metro Community Food Bank"
                 after="Override to Neighborhood Community Kitchen"
-                consequences="Routes 64 meals to a partner with a longer pickup window but higher capacity for surplus growth."
+                consequences={`Routes ${pickup.meals} meals to a partner with a longer pickup window but higher capacity for surplus growth.`}
                 reversible
-                status="pending"
-                onApprove={() => dispatch({ type: "OVERRIDE_PARTNER", partnerId: "p3", previousId: "p1", reason: "Larger absorber, longer holding capacity" })}
+                status={pickup.partnerId === "p3" ? "approved" : "pending"}
+                allowed={canOverride && state.checklistComplete}
+                onApprove={() => dispatch({ type: "OVERRIDE_PARTNER", partnerId: "p3", previousId: pickup.partnerId, reason: "Larger absorber, longer holding capacity" })}
               />
             )}
           </div>
@@ -137,13 +155,17 @@ function Pickups() {
               {!pickup ? (
                 <div className="text-center py-10 text-[12.5px] text-[var(--color-text-faint)]">
                   <Truck size={20} className="mx-auto mb-2 opacity-50" />
-                  Confirm safe surplus above to create a pickup.
+                  Confirm safe surplus and complete checklist to create a pickup.
                 </div>
               ) : (
-                <Timeline status={pickup.status} onAdvance={() => {
-                  const ns = nextStage(pickup.status);
-                  if (ns) dispatch({ type: "ADVANCE_PICKUP", pickupId: pickup.id, status: ns });
-                }} />
+                <Timeline
+                  status={pickup.status}
+                  onAdvance={() => {
+                    const ns = nextStage(pickup.status);
+                    if (ns) dispatch({ type: "ADVANCE_PICKUP", pickupId: pickup.id, status: ns });
+                  }}
+                  canAdvance={canAdvance}
+                />
               )}
             </div>
           </Section>
@@ -179,7 +201,7 @@ function PartnerRow({ rank, name, reason, picked }: { rank: number; name: string
   );
 }
 
-function Timeline({ status, onAdvance }: { status: PickupStatus; onAdvance: () => void }) {
+function Timeline({ status, onAdvance, canAdvance }: { status: PickupStatus; onAdvance: () => void; canAdvance: boolean }) {
   const idx = STAGES.findIndex((s) => s.id === status);
   return (
     <div>
@@ -201,7 +223,7 @@ function Timeline({ status, onAdvance }: { status: PickupStatus; onAdvance: () =
       </ol>
       <div className="mt-4 flex gap-2">
         {status !== "distribution-confirmed" && (
-          <button onClick={onAdvance} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white flex items-center gap-1.5">
+          <button onClick={onAdvance} disabled={!canAdvance} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white flex items-center gap-1.5 disabled:opacity-40">
             Advance to next stage <ChevronRight size={12} />
           </button>
         )}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp, BookOpen, Database, History, X } from "lucide-react";
 import { useStore } from "../../lib/store";
+import { formatFocusDateShort } from "../../lib/demo-date";
 
 export function EvidenceTrigger({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
@@ -26,7 +27,7 @@ function EvidenceDrawer({ onClose }: { onClose: () => void }) {
         <header className="px-5 py-4 border-b border-[var(--color-line)] flex items-start gap-3">
           <div className="min-w-0">
             <div className="text-[10.5px] uppercase tracking-[0.16em] text-[var(--color-text-faint)]">AI evidence</div>
-            <h2 className="text-[15px] font-semibold tracking-tight mt-0.5">Why Thursday Mar 12 is predicted at {f.expectedAttendance} students</h2>
+            <h2 className="text-[15px] font-semibold tracking-tight mt-0.5">Why {formatFocusDateShort()} is predicted at {f.expectedAttendance} students</h2>
             <p className="text-[11.5px] text-[var(--color-text-soft)] mt-1">Influential inputs — not causes. Ordered by historical correlation magnitude.</p>
           </div>
           <button onClick={onClose} className="ml-auto text-[var(--color-text-faint)]"><X size={16} /></button>

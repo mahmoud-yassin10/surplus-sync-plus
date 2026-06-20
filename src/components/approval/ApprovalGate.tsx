@@ -13,6 +13,7 @@ export function ApprovalGate({
   onApprove,
   onReject,
   onUndo,
+  allowed = true,
   extra,
 }: {
   title: string;
@@ -26,6 +27,7 @@ export function ApprovalGate({
   onApprove?: () => void;
   onReject?: () => void;
   onUndo?: () => void;
+  allowed?: boolean;
   extra?: ReactNode;
 }) {
   const approved = status === "approved";
@@ -57,7 +59,7 @@ export function ApprovalGate({
           <div className="mt-3 flex items-center gap-2 flex-wrap">
             {!approved && (
               <>
-                <button onClick={onApprove} className="text-[11.5px] px-3 py-1.5 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1">
+                <button onClick={onApprove} disabled={!allowed} className="text-[11.5px] px-3 py-1.5 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1 disabled:opacity-40">
                   <CheckCircle2 size={12} /> Approve
                 </button>
                 <button onClick={onReject} className="text-[11.5px] px-3 py-1.5 rounded-md border border-[var(--color-line)]">Reject</button>

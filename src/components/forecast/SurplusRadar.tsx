@@ -1,4 +1,5 @@
 import { HORIZON_DAYS } from "../../lib/mock";
+import { forecastViewFromState, syncHorizonFocusDay } from "../../lib/forecast";
 import { useStore } from "../../lib/store";
 
 const RISK_COLOR: Record<string, string> = {
@@ -10,7 +11,8 @@ const RISK_COLOR: Record<string, string> = {
 
 export function SurplusRadar() {
   const { state } = useStore();
-  const days = HORIZON_DAYS;
+  const view = forecastViewFromState(state);
+  const days = syncHorizonFocusDay(HORIZON_DAYS, state.forecast, state.currentPlan);
   const size = 360;
   const cx = size / 2;
   const cy = size / 2;
@@ -36,7 +38,7 @@ export function SurplusRadar() {
               const ring = i < 5 ? 80 : i < 8 ? 130 : 160;
               const x = cx + Math.cos(angle) * ring;
               const y = cy + Math.sin(angle) * ring;
-              const isFocus = d.risk === "high";
+              const isFocus = d.date === view.date;
               const color = RISK_COLOR[d.risk];
               const sz = 4 + Math.min(10, d.preventable / 20);
               return (
@@ -73,15 +75,15 @@ export function SurplusRadar() {
         <aside className="space-y-3">
           <div>
             <div className="text-[10.5px] uppercase tracking-[0.14em] text-[var(--color-text-faint)] mb-1">Selected horizon event</div>
-            <div className="text-[14px] font-semibold">Thursday Mar 12</div>
+            <div className="text-[14px] font-semibold">{view.focusDateShort}</div>
             <div className="text-[11.5px] text-[var(--color-text-soft)]">Exams · Trip · Early dismissal · Rain · Popular menu</div>
           </div>
           <div className="rounded-md border border-[var(--color-line)] p-3 space-y-2">
-            <Row label="Expected attendance" value="528" sub="80% interval 497–557" />
-            <Row label="Current plan" value="730 meals" />
-            <Row label="Recommended plan" value="562 meals" tone="ai" />
-            <Row label="Preventable surplus" value="168 meals" tone="critical" />
-            <Row label="Shortage probability" value="1.6%" />
+            <Row label="Expected attendance" value={String(view.expectedAttendance)} sub={`80% interval ${view.intervalLabel}`} />
+            <Row label="Current plan" value={`${view.currentPlan} meals`} />
+            <Row label="Recommended plan" value={`${view.recommendedPrep} meals`} tone="ai" />
+            <Row label="Preventable surplus" value={`${view.preventableSurplus} meals`} tone="critical" />
+            <Row label="Shortage probability" value={`${(view.shortageProb * 100).toFixed(1)}%`} />
           </div>
           <div className="rounded-md border border-[var(--color-line)] p-3">
             <div className="text-[10.5px] uppercase tracking-[0.14em] text-[var(--color-text-faint)] mb-2">Nearby capacity</div>

@@ -1,4 +1,5 @@
 import { Bus, Cloud, FlaskConical, Sun, Utensils } from "lucide-react";
+import type { HorizonDay } from "../../lib/types";
 import { HORIZON_DAYS } from "../../lib/mock";
 
 const ICONS: Record<string, any> = {
@@ -16,7 +17,7 @@ const RISK_COLOR: Record<string, string> = {
   critical: "var(--color-critical)",
 };
 
-export function HorizonRibbon({ onSelectDate, selected }: { onSelectDate?: (d: string) => void; selected?: string }) {
+export function HorizonRibbon({ onSelectDate, selected, horizonDays = HORIZON_DAYS }: { onSelectDate?: (d: string) => void; selected?: string; horizonDays?: HorizonDay[] }) {
   return (
     <div className="px-4 py-4">
       <div className="flex items-end justify-between mb-3 gap-3">
@@ -32,7 +33,7 @@ export function HorizonRibbon({ onSelectDate, selected }: { onSelectDate?: (d: s
       </div>
 
       <div className="grid grid-cols-5 md:grid-cols-10 gap-1.5">
-        {HORIZON_DAYS.map((d) => {
+        {horizonDays.map((d) => {
           const isFocus = d.risk === "high";
           const isSelected = selected === d.date;
           const color = RISK_COLOR[d.risk];

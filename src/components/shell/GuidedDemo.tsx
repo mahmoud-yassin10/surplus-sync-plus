@@ -3,14 +3,23 @@ import { useEffect } from "react";
 import { useStore } from "../../lib/store";
 import { useNavigate } from "@tanstack/react-router";
 
-const STEPS: { title: string; description: string; to: string; action?: (dispatch: any) => void }[] = [
+const STEPS: { title: string; description: string; to: string; action?: (dispatch: ReturnType<typeof useStore>["dispatch"]) => void }[] = [
   { title: "Open the Command Center", description: "Thursday is flagged as High risk surplus event.", to: "/" },
   { title: "Inspect the daily forecast", description: "Predicted 528 students vs 730 meals planned.", to: "/forecast" },
   { title: "Open Decision Canvas", description: "Compare plans and adjust under a 540 safety floor.", to: "/decision" },
   { title: "Correct attendance", description: "Field trip cancelled — approve the human correction.", to: "/attendance", action: (d) => d({ type: "CORRECT_ATTENDANCE" }) },
   { title: "Send provisional alerts", description: "Notify available recovery partners (not a confirmed donation).", to: "/recovery", action: (d) => d({ type: "SEND_PROVISIONAL_ALERTS" }) },
   { title: "Reserve partner capacity", description: "Metro Community Food Bank reserves 95 packaged meals.", to: "/messages", action: (d) => d({ type: "PARTNER_RESERVE", partnerId: "p1", meals: 95 }) },
-  { title: "Confirm same-day surplus", description: "Manager records 64 untouched packaged meals.", to: "/pickups", action: (d) => { d({ type: "CONFIRM_SURPLUS", meals: 64 }); d({ type: "COMPLETE_CHECKLIST" }); d({ type: "SELECT_PARTNER", partnerId: "p1", meals: 64 }); } },
+  {
+    title: "Confirm same-day surplus",
+    description: "Manager records 64 untouched packaged meals.",
+    to: "/pickups",
+    action: (d) => {
+      d({ type: "CONFIRM_SURPLUS", meals: 64 });
+      d({ type: "COMPLETE_CHECKLIST" });
+      d({ type: "SELECT_PARTNER", partnerId: "p1", meals: 64 });
+    },
+  },
   { title: "Complete the pickup", description: "Partner advances through driver, en-route, delivered.", to: "/pickups" },
   { title: "Review impact and audit", description: "Numbers stay separated: prevented · recovered · wasted.", to: "/impact" },
 ];

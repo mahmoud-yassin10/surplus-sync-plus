@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Bus, Cloud, FlaskConical, Sun, Users2, Utensils } from "lucide-react";
 import { Page, Section } from "../components/shell/AppShell";
 import { CALENDAR_EVENTS, FOCUS_DATE } from "../lib/mock";
+import { formatFocusDateShort } from "../lib/demo-date";
 
 const ICON: Record<string, any> = {
   exam: FlaskConical, trip: Bus, "early-dismissal": Sun, weather: Cloud, "popular-menu": Utensils, assembly: Users2,
@@ -60,7 +61,7 @@ function CalendarPage() {
           </div>
         </Section>
 
-        <Section title="Thursday Mar 12 events" hint="All inputs feeding the forecast">
+        <Section title={`${formatFocusDateShort()} events`} hint="All inputs feeding the forecast">
           <ul className="divide-y divide-[var(--color-line)]">
             {CALENDAR_EVENTS.filter((e) => e.date === FOCUS_DATE).map((e) => {
               const I = ICON[e.kind] || FlaskConical;

@@ -1,37 +1,29 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, Lock, ShieldCheck } from "lucide-react";
 import { useStore } from "../../lib/store";
+import { computeShortage, computeWaste, forecastViewFromState, SAFETY_FLOOR } from "../../lib/forecast";
 
-export const SAFETY_FLOOR = 540;
-const SCENARIOS = [
-  { id: "current", label: "Current school plan", meals: 730 },
-  { id: "hist", label: "Recent historical average", meals: 698 },
-  { id: "weekday", label: "Same-weekday average", meals: 712 },
-  { id: "rules", label: "Calendar-rule plan", meals: 620 },
-  { id: "ssp", label: "SurplusSync Plus plan", meals: 562 },
-] as const;
-
-export function computeShortage(meals: number) {
-  if (meals >= 600) return Math.max(0.001, 0.02 - (meals - 600) / 8000);
-  if (meals >= 540) return 0.02 + (600 - meals) / 1800;
-  return 0.5 + Math.min(0.49, (540 - meals) / 80);
-}
-export function computeWaste(meals: number) {
-  return Math.max(0, meals - 528);
-}
+export { SAFETY_FLOOR };
 
 export function DecisionCanvas() {
   const { state, dispatch } = useStore();
+  const view = forecastViewFromState(state);
   const [proposed, setProposed] = useState(state.currentPlan);
   const shortage = computeShortage(proposed);
-  const waste = computeWaste(proposed);
+  const waste = computeWaste(proposed, view.expectedAttendance);
   const blocked = proposed < SAFETY_FLOOR;
 
   const curve = useMemo(() => {
     const arr: { x: number; shortage: number; waste: number }[] = [];
-    for (let m = 450; m <= 800; m += 10) arr.push({ x: m, shortage: computeShortage(m), waste: computeWaste(m) });
+    for (let m = 450; m <= 800; m += 10) {
+      arr.push({
+        x: m,
+        shortage: computeShortage(m),
+        waste: computeWaste(m, view.expectedAttendance),
+      });
+    }
     return arr;
-  }, []);
+  }, [view.expectedAttendance]);
 
   const maxShortage = Math.max(...curve.map((c) => c.shortage));
   const maxWaste = Math.max(...curve.map((c) => c.waste));
@@ -56,8 +48,8 @@ export function DecisionCanvas() {
         <input type="range" min={450} max={800} step={2} value={proposed} onChange={(e) => setProposed(Number(e.target.value))} className="w-full accent-[var(--color-ai)]" />
 
         <div className="mt-5 grid sm:grid-cols-2 gap-4">
-          <Curve title="Shortage probability" color="var(--color-critical)" curve={curve} key1="shortage" max={maxShortage} marker={proposed} format={(v) => `${(v * 100).toFixed(1)}%`} />
-          <Curve title="Projected overproduction" color="var(--color-warning)" curve={curve} key1="waste" max={maxWaste} marker={proposed} format={(v) => `${Math.round(v)}`} />
+          <Curve title="Shortage probability" color="var(--color-critical)" curve={curve} key1="shortage" max={maxShortage} marker={proposed} format={(v) => `${(v * 100).toFixed(1)}%`} expectedAttendance={view.expectedAttendance} />
+          <Curve title="Projected overproduction" color="var(--color-warning)" curve={curve} key1="waste" max={maxWaste} marker={proposed} format={(v) => `${Math.round(v)}`} expectedAttendance={view.expectedAttendance} />
         </div>
 
         <div className={`mt-4 rounded-md p-3 border text-[12px] flex items-start gap-2 ${
@@ -68,7 +60,7 @@ export function DecisionCanvas() {
           {blocked ? <Lock size={14} className="mt-0.5" /> : <ShieldCheck size={14} className="mt-0.5" />}
           <div>
             {blocked ? (
-              <><strong>Blocked.</strong> {proposed} meals is below the 540 safety floor (lower bound of the 80% attendance interval). Adjust upward to continue.</>
+              <><strong>Blocked.</strong> {proposed} meals is below the {SAFETY_FLOOR}-meal safety floor. Adjust upward to continue.</>
             ) : (
               <><strong>Within safe range.</strong> Shortage probability {(shortage * 100).toFixed(1)}% · expected overproduction {waste} meals.</>
             )}
@@ -77,8 +69,8 @@ export function DecisionCanvas() {
 
         <div className="mt-4 flex flex-wrap gap-2">
           <button disabled={blocked} onClick={() => dispatch({ type: "SET_PLAN", meals: proposed })} className="text-[12px] px-3 py-2 rounded-md bg-[var(--color-ink)] text-white disabled:opacity-40">Apply proposed plan</button>
-          <button onClick={() => setProposed(state.forecast.recommendedPrep)} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">Snap to AI recommendation</button>
-          <button onClick={() => setProposed(730)} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">Reset to current plan</button>
+          <button onClick={() => setProposed(view.recommendedPrep)} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">Snap to AI recommendation</button>
+          <button onClick={() => setProposed(view.baselinePrep)} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">Reset to current plan</button>
         </div>
       </div>
 
@@ -95,16 +87,14 @@ export function DecisionCanvas() {
               </tr>
             </thead>
             <tbody className="tnum">
-              {SCENARIOS.map((s) => {
-                const sh = computeShortage(s.meals);
-                const wa = computeWaste(s.meals);
+              {view.scenarioRows.map((s) => {
                 const isSsp = s.id === "ssp";
                 return (
                   <tr key={s.id} className={`border-b border-[var(--color-line)] ${isSsp ? "bg-[var(--color-ai-soft)]/40" : ""}`}>
                     <td className="px-3 py-2 text-[var(--color-text)]">{s.label}</td>
                     <td className="px-3 py-2 text-right">{s.meals}</td>
-                    <td className="px-3 py-2 text-right text-[var(--color-critical)]">{(sh * 100).toFixed(1)}%</td>
-                    <td className="px-3 py-2 text-right text-[var(--color-warning)]">{wa}</td>
+                    <td className="px-3 py-2 text-right text-[var(--color-critical)]">{(s.shortage * 100).toFixed(1)}%</td>
+                    <td className="px-3 py-2 text-right text-[var(--color-warning)]">{s.waste}</td>
                   </tr>
                 );
               })}
@@ -115,7 +105,7 @@ export function DecisionCanvas() {
         <div className="rounded-md border border-[var(--color-warning)]/30 bg-[var(--color-warning-soft)]/40 p-3 text-[11.5px] text-[var(--color-text-soft)] flex gap-2">
           <AlertTriangle size={14} className="text-[var(--color-warning)] mt-0.5 shrink-0" />
           <div>
-            AI plans are estimates with visible uncertainty. The cafeteria manager makes the final call. Safety floor equals the lower 80% interval bound.
+            AI plans are estimates with visible uncertainty. The cafeteria manager makes the final call. The {SAFETY_FLOOR}-meal safety floor is a policy minimum, separate from the statistical attendance interval.
           </div>
         </div>
       </div>
@@ -123,7 +113,7 @@ export function DecisionCanvas() {
   );
 }
 
-function Curve({ title, color, curve, key1, max, marker, format }: { title: string; color: string; curve: { x: number; shortage: number; waste: number }[]; key1: "shortage" | "waste"; max: number; marker: number; format: (v: number) => string }) {
+function Curve({ title, color, curve, key1, max, marker, format, expectedAttendance }: { title: string; color: string; curve: { x: number; shortage: number; waste: number }[]; key1: "shortage" | "waste"; max: number; marker: number; format: (v: number) => string; expectedAttendance: number }) {
   const W = 220, H = 80;
   const xMin = 450, xMax = 800;
   const path = curve.map((c, i) => {
@@ -133,7 +123,7 @@ function Curve({ title, color, curve, key1, max, marker, format }: { title: stri
     return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
   const markerX = ((marker - xMin) / (xMax - xMin)) * W;
-  const v = key1 === "shortage" ? computeShortage(marker) : computeWaste(marker);
+  const v = key1 === "shortage" ? computeShortage(marker) : computeWaste(marker, expectedAttendance);
 
   return (
     <div>

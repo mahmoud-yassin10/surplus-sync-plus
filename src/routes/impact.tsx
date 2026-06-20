@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Activity, ArrowDownRight, Sparkles } from "lucide-react";
 import { Page, Section } from "../components/shell/AppShell";
 import { useStore } from "../lib/store";
+import { forecastViewFromState } from "../lib/forecast";
 
 export const Route = createFileRoute("/impact")({
   head: () => ({ meta: [{ title: "Impact ledger — SurplusSync Plus" }] }),
@@ -11,11 +12,12 @@ export const Route = createFileRoute("/impact")({
 function Impact() {
   const { state } = useStore();
   const i = state.impact;
+  const view = forecastViewFromState(state);
 
   return (
     <Page kicker="Impact ledger" title="Prevented · recovered · wasted">
       <div className="grid md:grid-cols-3 gap-4 mb-5">
-        <Ledger title="Prevented" value={i.preventedMeals} sub="meals never prepared" tone="ai" derivation="730 baseline − approved AI recommendation" label="Predicted → realized" />
+        <Ledger title="Prevented" value={i.preventedMeals} sub="meals never prepared" tone="ai" derivation={`${view.baselinePrep} baseline − approved AI recommendation (${view.recommendedPrep} meals)`} label="Predicted → realized" />
         <Ledger title="Recovered" value={i.recoveredMeals} sub="safe meals redistributed" tone="success" derivation="Confirmed surplus completed pickups" label="Observed" />
         <Ledger title="Nonrecoverable" value={i.wastedMeals} sub="cannot redistribute" tone="critical" derivation="Confirmed unsafe or expired food" label="Observed" />
       </div>
@@ -29,7 +31,7 @@ function Impact() {
 
       <Section title="How each number is derived" hint="The same meal is never counted in more than one category">
         <ul className="divide-y divide-[var(--color-line)]">
-          <Row title="Prevented" desc="Difference between the baseline 730-meal plan and the approved AI recommendation (562 meals). Counted only when a human approves a reduced plan before service." />
+          <Row title="Prevented" desc={`Difference between the baseline ${view.baselinePrep}-meal plan and the approved AI recommendation (${view.recommendedPrep} meals). Counted only when a human approves a reduced plan before service.`} />
           <Row title="Recovered" desc="Meals confirmed safe post-service and successfully picked up by a verified partner with completed distribution." />
           <Row title="Nonrecoverable" desc="Surplus that fails the human-completed eligibility checklist (temperature, packaging, time-on-line, allergen labelling, partner compatibility)." />
           <Row title="Forecast accuracy" desc="Rolling 30-day mean absolute percentage error of attendance prediction. Updated nightly." />

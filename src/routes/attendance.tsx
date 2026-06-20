@@ -4,6 +4,7 @@ import { Page, Section } from "../components/shell/AppShell";
 import { ApprovalGate } from "../components/approval/ApprovalGate";
 import { ATTENDANCE_HISTORY } from "../lib/mock";
 import { useStore } from "../lib/store";
+import { canPerform } from "../lib/permissions";
 
 export const Route = createFileRoute("/attendance")({
   head: () => ({ meta: [{ title: "Attendance — SurplusSync Plus" }] }),
@@ -45,13 +46,14 @@ function Attendance() {
           <ApprovalGate
             title="Attendance correction — Grade 10 field trip cancelled"
             who="School Administrator"
-            before="Expected 468 students (trip out)"
+            before={`Expected ${state.forecast.expectedAttendance} students (model baseline)`}
             after="Expected 540 students (trip cancelled)"
-            consequences="Recalculates Thursday forecast: recommended prep 562 → 575 meals. 112 attendance records updated."
+            consequences={`Recalculates Thursday forecast: recommended prep ${state.attendanceCorrected ? 575 : state.forecast.recommendedPrep} → 575 meals. Attendance records updated.`}
             risks={state.attendanceCorrected ? undefined : "Reverses if district reinstates the trip before service."}
             reversible
             status={state.attendanceCorrected ? "approved" : "pending"}
             onApprove={() => dispatch({ type: "CORRECT_ATTENDANCE" })}
+            allowed={canPerform(state.role, "CORRECT_ATTENDANCE")}
           />
         </div>
       </div>
