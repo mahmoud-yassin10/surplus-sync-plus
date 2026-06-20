@@ -19,6 +19,34 @@ export function provisionalAlertsSent(state: State): boolean {
   return state.audit.some((entry) => entry.action.startsWith("Sent provisional surplus alert"));
 }
 
+export function buildPartnerPrerequisites(
+  state: State,
+): ReconciliationSnapshot["operational"]["partnerPrerequisites"] {
+  const surplusMeals = state.surplusConfirmed;
+  const recoveryWindowValid =
+    surplusMeals != null &&
+    state.checklistComplete &&
+    state.partners.some(
+      (partner) =>
+        partner.status !== "closed" &&
+        partner.capacity >= surplusMeals &&
+        partner.windowStart !== "-" &&
+        partner.windowEnd !== "-",
+    );
+
+  return {
+    surplusConfirmed: surplusMeals != null,
+    surplusMeals,
+    foodSafetyChecklistComplete: state.checklistComplete,
+    recoveryWindowValid,
+    proposalsPermitted: true,
+    resetVersion: 0,
+    cancellationVersion: state.audit.filter(
+      (entry) => entry.action === "Cancelled provisional alerts",
+    ).length,
+  };
+}
+
 function resolveSelectedPartnerId(state: State): CopilotPartnerId | null {
   const activePickup = state.pickups[state.pickups.length - 1];
   if (activePickup) {
@@ -45,6 +73,7 @@ export function buildReconciliationSnapshot(state: State): ReconciliationSnapsho
       attendanceCorrected: state.attendanceCorrected,
       provisionalAlertsSent: provisionalAlertsSent(state),
       selectedPartnerId: resolveSelectedPartnerId(state),
+      partnerPrerequisites: buildPartnerPrerequisites(state),
     },
   };
 }
