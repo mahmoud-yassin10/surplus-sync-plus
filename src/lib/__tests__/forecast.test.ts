@@ -7,6 +7,7 @@ import {
   computeShortage,
   computeWaste,
   forecastViewFromState,
+  impactCategoryDisclosures,
   preventedMealsDerivation,
   preventedMealsDescription,
   shortageProbabilityForPrep,
@@ -120,5 +121,25 @@ describe("forecast", () => {
     });
     expect(preventedMealsDerivation(approved)).toContain("approved AI recommendation");
     expect(preventedMealsDescription(approved)).toContain("approved AI recommendation");
+  });
+
+  it("discloses mutually exclusive impact categories", () => {
+    const view = buildForecastView({
+      forecast: FORECAST_THURSDAY,
+      currentPlan: 562,
+      approvedRecommendationKey: buildRecommendationKey(FORECAST_THURSDAY),
+      attendanceCorrected: false,
+    });
+    const disclosures = impactCategoryDisclosures(view);
+
+    expect(disclosures.map((row) => row.title)).toEqual([
+      "Prevented",
+      "Recovered",
+      "Nonrecoverable",
+      "Forecast accuracy",
+    ]);
+    expect(disclosures.find((row) => row.title === "Prevented")?.desc).toContain("before service");
+    expect(disclosures.find((row) => row.title === "Recovered")?.desc).toContain("Observed");
+    expect(disclosures.find((row) => row.title === "Nonrecoverable")?.desc).toContain("Observed");
   });
 });

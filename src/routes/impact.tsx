@@ -6,8 +6,8 @@ import { TiltCard } from "../components/shell/TiltCard";
 import { useStore } from "../lib/store";
 import {
   forecastViewFromState,
+  impactCategoryDisclosures,
   preventedMealsDerivation,
-  preventedMealsDescription,
 } from "../lib/forecast";
 
 export const Route = createFileRoute("/impact")({
@@ -29,7 +29,7 @@ function Impact() {
           sub="meals never prepared"
           tone="ai"
           derivation={preventedMealsDerivation(view)}
-          label="Predicted → realized"
+          label="Pre-service estimate"
         />
         <Ledger
           title="Recovered"
@@ -67,19 +67,9 @@ function Impact() {
         hint="The same meal is never counted in more than one category"
       >
         <ul className="divide-y divide-[var(--color-line)]">
-          <Row title="Prevented" desc={preventedMealsDescription(view)} />
-          <Row
-            title="Recovered"
-            desc="Meals confirmed safe post-service and successfully picked up by a verified partner with completed distribution."
-          />
-          <Row
-            title="Nonrecoverable"
-            desc="Surplus that fails the human-completed eligibility checklist (temperature, packaging, time-on-line, allergen labelling, partner compatibility)."
-          />
-          <Row
-            title="Forecast accuracy"
-            desc="Rolling 30-day mean absolute percentage error of attendance prediction. Updated nightly."
-          />
+          {impactCategoryDisclosures(view).map((row) => (
+            <Row key={row.title} title={row.title} desc={row.desc} />
+          ))}
         </ul>
       </Section>
 

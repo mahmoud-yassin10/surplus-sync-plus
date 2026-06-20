@@ -22,7 +22,8 @@ describe("store reducer", () => {
     expect(corrected.approvedRecommendationKey).toBeNull();
     const reapproved = apply(corrected, { type: "APPLY_RECOMMENDATION" });
     expect(reapproved.currentPlan).toBe(575);
-    expect(reapproved.impact.preventedMeals).toBe(168 + 155);
+    expect(reapproved.impact.preventedMeals).toBe(155);
+    expect(reapproved.impact.costSaved).toBeCloseTo(155 * 3.4);
   });
 
   it("rejects SET_PLAN below safety floor", () => {
