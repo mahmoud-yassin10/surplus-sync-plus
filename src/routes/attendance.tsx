@@ -9,6 +9,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { Page, Section } from "../components/shell/AppShell";
+import { CountUp } from "../components/shell/motion";
 import { ApprovalGate } from "../components/approval/ApprovalGate";
 import { ATTENDANCE_HISTORY } from "../lib/mock";
 import { DEMO_FOCUS_DATE } from "../lib/demo-date";
@@ -73,7 +74,7 @@ function Attendance() {
         </Section>
 
         <Section title="Roster snapshot">
-          <div className="p-4 grid grid-cols-2 gap-3 text-[12.5px]">
+          <div className="p-4 grid grid-cols-2 gap-3 text-[12.5px] stagger-fast">
             <Stat label="Enrolled" value={820} />
             <Stat label="Meal-eligible" value={760} />
             <Stat label="Trailing avg" value={702} />
@@ -114,11 +115,13 @@ function Attendance() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md border border-[var(--color-line)] p-3">
+    <div className="hover-lift rounded-md border border-[var(--color-line)] p-3">
       <div className="text-[10.5px] uppercase tracking-wider text-[var(--color-text-faint)]">
         {label}
       </div>
-      <div className="text-[18px] font-semibold tnum mt-0.5">{value}</div>
+      <div className="font-display text-[18px] font-semibold tnum mt-0.5">
+        <CountUp value={value} />
+      </div>
     </div>
   );
 }

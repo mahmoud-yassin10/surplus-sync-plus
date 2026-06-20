@@ -56,17 +56,22 @@ function CalendarPage() {
                 return (
                   <div
                     key={c.date}
-                    className={`aspect-square rounded border p-1.5 text-[10.5px] flex flex-col ${
+                    className={`aspect-square rounded border p-1.5 text-[10.5px] flex flex-col transition-[transform,background-color,border-color] duration-200 hover:-translate-y-0.5 ${
                       isFocus
                         ? "border-[var(--color-critical)] bg-[var(--color-critical-soft)]/30"
                         : isWeekend
                           ? "border-[var(--color-line)] bg-[var(--color-surface-2)]/40 text-[var(--color-text-faint)]"
                           : events.length > 0
-                            ? "border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)]/30"
-                            : "border-[var(--color-line)]"
+                            ? "border-[var(--color-warning)]/40 bg-[var(--color-warning-soft)]/30 hover:border-[var(--color-warning)]"
+                            : "border-[var(--color-line)] hover:border-[var(--color-line-strong)] hover:bg-[var(--color-surface-2)]/50"
                     }`}
                   >
-                    <div className="tnum font-medium text-[11px]">{c.day}</div>
+                    <div className="flex items-center gap-1">
+                      <span className="tnum font-medium text-[11px]">{c.day}</span>
+                      {isFocus && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-critical)] pulse-dot" />
+                      )}
+                    </div>
                     <div className="mt-auto flex flex-wrap gap-0.5">
                       {events.slice(0, 3).map((e) => {
                         const I = ICON[e.kind];
@@ -83,11 +88,14 @@ function CalendarPage() {
         </Section>
 
         <Section title={`${formatFocusDateShort()} events`} hint="All inputs feeding the forecast">
-          <ul className="divide-y divide-[var(--color-line)]">
+          <ul className="divide-y divide-[var(--color-line)] stagger-fast">
             {CALENDAR_EVENTS.filter((e) => e.date === FOCUS_DATE).map((e) => {
               const I = ICON[e.kind] || FlaskConical;
               return (
-                <li key={e.id} className="px-4 py-3 flex gap-3">
+                <li
+                  key={e.id}
+                  className="px-4 py-3 flex gap-3 transition-colors hover:bg-[var(--color-surface-2)]"
+                >
                   <I size={14} className="text-[var(--color-ai)] mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <div className="text-[12.5px] text-[var(--color-text)]">{e.title}</div>

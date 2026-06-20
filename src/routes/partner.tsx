@@ -18,7 +18,7 @@ function Partner() {
     <Page kicker="Recovery partner portal" title={me.name}>
       <div className="grid lg:grid-cols-3 gap-5">
         <Section title="Capacity today">
-          <div className="p-4 space-y-2.5 text-[12.5px]">
+          <div className="p-4 space-y-2.5 text-[12.5px] stagger-fast">
             <Row label="Total capacity" value={`${me.capacity} meals`} />
             <Row label="Reserved" value={`${match?.reservedMeals ?? 0} meals`} tone="ai" />
             <Row label="Refrigerated" value={me.refrigerated ? "Yes" : "No"} icon={<Snowflake size={11} />} />
@@ -32,15 +32,15 @@ function Partner() {
             {alerts.length === 0 ? (
               <div className="p-8 text-center text-[12.5px] text-[var(--color-text-faint)]">No new alerts.</div>
             ) : (
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-[var(--color-line)] stagger-fast">
                 {alerts.map((a) => (
-                  <li key={a.id} className="px-4 py-3">
+                  <li key={a.id} className="px-4 py-3 transition-colors hover:bg-[var(--color-surface-2)]/60">
                     <div className="text-[12.5px]">{a.body}</div>
                     <div className="text-[10.5px] text-[var(--color-text-faint)] mt-1 tnum">{new Date(a.ts).toLocaleString()}</div>
                     {!match && (
-                      <div className="mt-2 flex gap-2">
-                        <button onClick={() => dispatch({ type: "PARTNER_RESERVE", partnerId: me.id, meals: 95 })} className="text-[11.5px] px-2.5 py-1.5 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1"><CheckCircle2 size={11} /> Reserve up to 95 meals</button>
-                        <button onClick={() => dispatch({ type: "PARTNER_DECLINE", partnerId: me.id })} className="text-[11.5px] px-2.5 py-1.5 rounded-md border border-[var(--color-line)]">Decline</button>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button onClick={() => dispatch({ type: "PARTNER_RESERVE", partnerId: me.id, meals: 95 })} className="press text-[11.5px] px-2.5 py-1.5 rounded-md bg-[var(--color-success)] text-white flex items-center gap-1"><CheckCircle2 size={11} /> Reserve up to 95 meals</button>
+                        <button onClick={() => dispatch({ type: "PARTNER_DECLINE", partnerId: me.id })} className="press text-[11.5px] px-2.5 py-1.5 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)]">Decline</button>
                       </div>
                     )}
                     {match && <div className="mt-2 text-[11.5px] text-[var(--color-success)]">Reserved {match.reservedMeals} meals</div>}
@@ -54,9 +54,9 @@ function Partner() {
             {state.pickups.length === 0 ? (
               <div className="p-8 text-center text-[12.5px] text-[var(--color-text-faint)]">No confirmed requests yet.</div>
             ) : (
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-[var(--color-line)] stagger-fast">
                 {state.pickups.map((p) => (
-                  <li key={p.id} className="px-4 py-3 flex items-center gap-3">
+                  <li key={p.id} className="px-4 py-3 flex items-center gap-3 transition-colors hover:bg-[var(--color-surface-2)]/60">
                     <Truck size={14} className="text-[var(--color-ai)]" />
                     <div>
                       <div className="text-[12.5px] font-medium">{p.meals} meals · ETA {p.eta}</div>

@@ -43,7 +43,7 @@ function Meals() {
 
         <Section title="Recent records">
           <div className="overflow-x-auto">
-            <table className="w-full text-[12px]">
+            <table className="w-full text-[12px] min-w-[420px]">
               <thead className="text-[var(--color-text-faint)] uppercase text-[9.5px] tracking-wider border-b border-[var(--color-line)]">
                 <tr>
                   <th className="text-left px-3 py-2 font-medium">Date</th>
@@ -55,7 +55,10 @@ function Meals() {
               </thead>
               <tbody className="tnum">
                 {MEAL_HISTORY.slice(-10).reverse().map((m) => (
-                  <tr key={m.date} className="border-b border-[var(--color-line)] last:border-0">
+                  <tr
+                    key={m.date}
+                    className="border-b border-[var(--color-line)] last:border-0 transition-colors hover:bg-[var(--color-surface-2)]"
+                  >
                     <td className="px-3 py-2 text-[var(--color-text-soft)]">{m.date.slice(5)}</td>
                     <td className="px-3 py-2 text-[var(--color-text)]">{m.menu}</td>
                     <td className="px-3 py-2 text-right">{m.prepared}</td>

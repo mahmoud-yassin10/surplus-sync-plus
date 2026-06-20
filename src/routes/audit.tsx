@@ -20,13 +20,13 @@ function Audit() {
   return (
     <Page kicker="Audit storyline" title="Decision trail">
       <Section title="Events" hint="Every consequential AI and human action is recorded · cannot be deleted">
-        <ol className="relative">
+        <ol className="relative stagger-fast">
           <span className="absolute left-[34px] top-2 bottom-2 w-px bg-[var(--color-line)]" aria-hidden />
           {state.audit.map((a) => {
             const meta = ACTOR_STYLE[a.actorType];
             const Icon = meta.icon;
             return (
-              <li key={a.id} className="relative pl-16 pr-4 py-3 border-b border-[var(--color-line)] last:border-0">
+              <li key={a.id} className="relative pl-16 pr-4 py-3 border-b border-[var(--color-line)] last:border-0 transition-colors hover:bg-[var(--color-surface-2)]/60">
                 <div className="absolute left-4 top-3.5 h-7 w-7 rounded-full flex items-center justify-center" style={{ background: meta.bg, color: meta.color }}>
                   <Icon size={12} />
                 </div>
