@@ -27,6 +27,11 @@ export function computeShortage(meals: number): number {
   return 0.5 + Math.min(0.49, (SAFETY_FLOOR - meals) / 80);
 }
 
+/** Canonical shortage probability for a preparation plan (used across all forecast surfaces). */
+export function shortageProbabilityForPrep(meals: number): number {
+  return computeShortage(meals);
+}
+
 export function computeWaste(meals: number, expectedAttendance: number): number {
   return Math.max(0, meals - expectedAttendance);
 }
@@ -63,7 +68,7 @@ export function applyAttendanceCorrection(forecast: Forecast): Forecast {
     intervalHigh: 568,
     recommendedPrep: 575,
     preventableSurplus: 155,
-    shortageProb: 0.016,
+    shortageProb: shortageProbabilityForPrep(575),
     influences: forecast.influences.map((i) =>
       i.factor.startsWith("Grade 10 field trip")
         ? { ...i, magnitude: 0, note: "Trip cancelled — input removed" }
@@ -143,7 +148,7 @@ export function buildForecastView(input: ForecastViewInput): ForecastView {
     currentPlan,
     baselinePrep,
     preventableSurplus: forecast.preventableSurplus,
-    shortageProb: forecast.shortageProb,
+    shortageProb: shortageProbabilityForPrep(forecast.recommendedPrep),
     largeSurplusProb: forecast.largeSurplusProb,
     safetyFloor: SAFETY_FLOOR,
     safetyBuffer: computeSafetyBuffer(forecast.recommendedPrep, forecast.intervalHigh),
@@ -271,4 +276,18 @@ export function forecastViewFromState(state: {
 
 export function isFocusForecast(forecast: Forecast): boolean {
   return forecast.date === DEMO_FOCUS_DATE;
+}
+
+export function recommendationStatusLabel(approved: boolean): string {
+  return approved ? "approved AI recommendation" : "proposed AI recommendation";
+}
+
+export function preventedMealsDerivation(view: ForecastView): string {
+  const label = recommendationStatusLabel(view.approvedForCurrentRecommendation);
+  return `${view.baselinePrep} baseline − ${label} (${view.recommendedPrep} meals)`;
+}
+
+export function preventedMealsDescription(view: ForecastView): string {
+  const label = recommendationStatusLabel(view.approvedForCurrentRecommendation);
+  return `Difference between the baseline ${view.baselinePrep}-meal plan and the ${label} (${view.recommendedPrep} meals). Counted only when a human approves a reduced plan before service.`;
 }

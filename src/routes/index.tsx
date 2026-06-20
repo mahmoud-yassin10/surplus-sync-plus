@@ -61,7 +61,7 @@ function CommandCenter() {
           label="Shortage probability"
           value={
             <span className="tnum text-[18px] font-semibold">
-              {(f.shortageProb * 100).toFixed(1)}%
+              {(view.shortageProb * 100).toFixed(1)}%
             </span>
           }
           note="80% interval respected"

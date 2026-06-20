@@ -82,7 +82,7 @@ function Attendance() {
         <div className="lg:col-span-2">
           <ApprovalGate
             title="Attendance correction — Grade 10 field trip cancelled"
-            who="School Administrator"
+            who="Cafeteria Manager or School Administrator"
             before={`Expected ${state.forecast.expectedAttendance} students (model baseline)`}
             after="Expected 540 students (trip cancelled)"
             consequences={`Recalculates Thursday forecast: recommended prep ${state.attendanceCorrected ? 575 : state.forecast.recommendedPrep} → 575 meals. Attendance records updated.`}

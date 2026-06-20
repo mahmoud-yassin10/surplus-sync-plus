@@ -42,7 +42,7 @@ function Forecast() {
               <Big label="Expected attendance" value={f.expectedAttendance} unit="students" />
               <Big label="80% interval" value={view.intervalLabel} unit="students" />
               <Big label="Recommended prep" value={f.recommendedPrep} tone="ai" unit="meals" />
-              <Big label="Shortage probability" value={`${(f.shortageProb * 100).toFixed(1)}%`} />
+              <Big label="Shortage probability" value={`${(view.shortageProb * 100).toFixed(1)}%`} />
               <Big
                 label="Preventable surplus"
                 value={f.preventableSurplus}

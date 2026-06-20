@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Activity, ArrowDownRight, Sparkles } from "lucide-react";
 import { Page, Section } from "../components/shell/AppShell";
 import { useStore } from "../lib/store";
-import { forecastViewFromState } from "../lib/forecast";
+import { forecastViewFromState, preventedMealsDerivation, preventedMealsDescription } from "../lib/forecast";
 
 export const Route = createFileRoute("/impact")({
   head: () => ({ meta: [{ title: "Impact ledger — SurplusSync Plus" }] }),
@@ -22,7 +22,7 @@ function Impact() {
           value={i.preventedMeals}
           sub="meals never prepared"
           tone="ai"
-          derivation={`${view.baselinePrep} baseline − approved AI recommendation (${view.recommendedPrep} meals)`}
+          derivation={preventedMealsDerivation(view)}
           label="Predicted → realized"
         />
         <Ledger
@@ -57,7 +57,7 @@ function Impact() {
         <ul className="divide-y divide-[var(--color-line)]">
           <Row
             title="Prevented"
-            desc={`Difference between the baseline ${view.baselinePrep}-meal plan and the approved AI recommendation (${view.recommendedPrep} meals). Counted only when a human approves a reduced plan before service.`}
+            desc={preventedMealsDescription(view)}
           />
           <Row
             title="Recovered"

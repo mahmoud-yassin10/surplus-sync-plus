@@ -7,6 +7,9 @@ import {
   computeShortage,
   computeWaste,
   forecastViewFromState,
+  preventedMealsDerivation,
+  preventedMealsDescription,
+  shortageProbabilityForPrep,
   SAFETY_FLOOR,
   syncHorizonFocusDay,
 } from "../forecast";
@@ -82,5 +85,40 @@ describe("forecast", () => {
   it("computePreventedImpact returns zero when plan not reduced", () => {
     expect(computePreventedImpact(730, 730)).toEqual({ preventedMeals: 0, costSaved: 0 });
     expect(computePreventedImpact(730, 562).preventedMeals).toBe(168);
+  });
+
+  it("exposes the same shortage probability for the 562-meal recommendation across forecast views", () => {
+    const view = buildForecastView({
+      forecast: FORECAST_THURSDAY,
+      currentPlan: 730,
+      approvedRecommendationKey: null,
+      attendanceCorrected: false,
+    });
+    const expected = shortageProbabilityForPrep(562);
+    expect((expected * 100).toFixed(1)).toBe("4.1");
+    expect(view.shortageProb).toBe(expected);
+    expect(view.scenarioRows.find((r) => r.id === "ssp")!.shortage).toBe(expected);
+    expect(forecastViewFromState(INITIAL).shortageProb).toBe(expected);
+  });
+
+  it("uses proposed wording before recommendation approval and approved wording after", () => {
+    const pending = buildForecastView({
+      forecast: FORECAST_THURSDAY,
+      currentPlan: 730,
+      approvedRecommendationKey: null,
+      attendanceCorrected: false,
+    });
+    expect(preventedMealsDerivation(pending)).toContain("proposed AI recommendation");
+    expect(preventedMealsDerivation(pending)).not.toContain("approved AI recommendation");
+    expect(preventedMealsDescription(pending)).toContain("proposed AI recommendation");
+
+    const approved = buildForecastView({
+      forecast: FORECAST_THURSDAY,
+      currentPlan: 562,
+      approvedRecommendationKey: buildRecommendationKey(FORECAST_THURSDAY),
+      attendanceCorrected: false,
+    });
+    expect(preventedMealsDerivation(approved)).toContain("approved AI recommendation");
+    expect(preventedMealsDescription(approved)).toContain("approved AI recommendation");
   });
 });
