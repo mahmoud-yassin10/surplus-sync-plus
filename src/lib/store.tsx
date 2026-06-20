@@ -10,6 +10,23 @@ import {
   PARTNERS,
   SCHOOL,
 } from "./mock";
+import { demoTimestamp } from "./demo-date";
+import { formatFocusDateSlash } from "./demo-date";
+import {
+  applyAttendanceCorrection,
+  buildRecommendationKey,
+  computePickupEta,
+  computePreventedImpact,
+} from "./forecast";
+import {
+  assertCanAdvanceBeyondSurplusConfirmed,
+  assertCanApplyRecommendation,
+  assertCanOverridePartner,
+  assertCanSelectPartner,
+  assertMonotonicPickupAdvance,
+  assertPlanAboveFloor,
+} from "./invariants";
+import { canPerform, type ConsequentialAction } from "./permissions";
 import type {
   AuditEvent,
   Forecast,
@@ -22,12 +39,12 @@ import type {
   Role,
 } from "./types";
 
-interface State {
+export interface State {
   role: Role;
   aiMode: boolean;
   forecast: Forecast;
   currentPlan: number;
-  approvedRecommendation: boolean;
+  approvedRecommendationKey: string | null;
   attendanceCorrected: boolean;
   surplusConfirmed: number | null;
   checklistComplete: boolean;
@@ -37,15 +54,15 @@ interface State {
   messages: Message[];
   impact: ImpactRecord;
   partners: RecoveryPartner[];
-  guidedStep: number; // 0 = inactive
+  guidedStep: number;
 }
 
-const INITIAL: State = {
+export const INITIAL: State = {
   role: "manager",
   aiMode: true,
   forecast: FORECAST_THURSDAY,
   currentPlan: 730,
-  approvedRecommendation: false,
+  approvedRecommendationKey: null,
   attendanceCorrected: false,
   surplusConfirmed: null,
   checklistComplete: false,
@@ -58,7 +75,7 @@ const INITIAL: State = {
   guidedStep: 0,
 };
 
-type Action =
+export type Action =
   | { type: "RESET" }
   | { type: "SET_ROLE"; role: Role }
   | { type: "TOGGLE_AI" }
@@ -77,24 +94,54 @@ type Action =
   | { type: "MESSAGE"; message: Omit<Message, "id" | "ts"> }
   | { type: "GUIDED_STEP"; step: number };
 
+let demoTimeOffset = 0;
+
+function nextDemoTimestamp(): string {
+  const ts = demoTimestamp(demoTimeOffset);
+  demoTimeOffset += 1000;
+  return ts;
+}
+
 function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
 function withAudit(state: State, event: Omit<AuditEvent, "id" | "ts">): AuditEvent[] {
-  return [
-    { id: uid(), ts: new Date().toISOString(), ...event },
-    ...state.audit,
-  ];
+  return [{ id: uid(), ts: nextDemoTimestamp(), ...event }, ...state.audit];
 }
 
 function withMessage(state: State, msg: Omit<Message, "id" | "ts">): Message[] {
-  return [...state.messages, { id: uid(), ts: new Date().toISOString(), ...msg }];
+  return [...state.messages, { id: uid(), ts: nextDemoTimestamp(), ...msg }];
 }
 
-function reducer(state: State, action: Action): State {
+function denied(state: State, action: string, reason: string): State {
+  return {
+    ...state,
+    audit: withAudit(state, {
+      actor: "System",
+      actorType: "system",
+      action: `Action blocked: ${action}`,
+      reason,
+      reversible: false,
+    }),
+  };
+}
+
+function guardRole(state: State, action: ConsequentialAction): boolean {
+  return canPerform(state.role, action);
+}
+
+const ACTOR_NAMES: Record<Role, string> = {
+  manager: SCHOOL.manager,
+  admin: SCHOOL.admin,
+  partner: "Recovery Partner",
+  platform: "Platform Admin",
+};
+
+export function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "RESET":
+      demoTimeOffset = 0;
       return { ...INITIAL };
     case "SET_ROLE":
       return { ...state, role: action.role };
@@ -103,38 +150,52 @@ function reducer(state: State, action: Action): State {
         ...state,
         aiMode: !state.aiMode,
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: state.aiMode ? "Switched to manual mode" : "Re-enabled AI assistance",
           reversible: true,
         }),
       };
-    case "APPLY_RECOMMENDATION":
+    case "APPLY_RECOMMENDATION": {
+      if (!guardRole(state, "APPLY_RECOMMENDATION")) {
+        return denied(state, "APPLY_RECOMMENDATION", "Requires cafeteria manager role.");
+      }
+      const key = buildRecommendationKey(state.forecast);
+      if (state.approvedRecommendationKey === key) return state;
+      const planCheck = assertCanApplyRecommendation(state.forecast);
+      if (!planCheck.ok) return denied(state, "APPLY_RECOMMENDATION", planCheck.reason);
+      const { preventedMeals, costSaved } = computePreventedImpact(SCHOOL.normalPrep, state.forecast.recommendedPrep);
       return {
         ...state,
         currentPlan: state.forecast.recommendedPrep,
-        approvedRecommendation: true,
+        approvedRecommendationKey: key,
         impact: {
           ...state.impact,
-          preventedMeals: state.impact.preventedMeals + (730 - state.forecast.recommendedPrep),
-          costSaved: state.impact.costSaved + (730 - state.forecast.recommendedPrep) * 3.4,
+          preventedMeals: state.impact.preventedMeals + preventedMeals,
+          costSaved: state.impact.costSaved + costSaved,
         },
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
-          action: `Approved AI preparation recommendation`,
-          before: `730 meals`,
+          action: "Approved AI preparation recommendation",
+          before: `${SCHOOL.normalPrep} meals`,
           after: `${state.forecast.recommendedPrep} meals`,
           reason: "AI rationale accepted after evidence review",
           reversible: true,
         }),
       };
-    case "SET_PLAN":
+    }
+    case "SET_PLAN": {
+      if (!guardRole(state, "SET_PLAN")) {
+        return denied(state, "SET_PLAN", "Requires cafeteria manager role.");
+      }
+      const floor = assertPlanAboveFloor(action.meals);
+      if (!floor.ok) return denied(state, "SET_PLAN", floor.reason);
       return {
         ...state,
         currentPlan: action.meals,
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: "Adjusted preparation plan",
           before: `${state.currentPlan} meals`,
@@ -142,46 +203,46 @@ function reducer(state: State, action: Action): State {
           reversible: true,
         }),
       };
-    case "CORRECT_ATTENDANCE":
+    }
+    case "CORRECT_ATTENDANCE": {
+      if (!guardRole(state, "CORRECT_ATTENDANCE")) {
+        return denied(state, "CORRECT_ATTENDANCE", "Requires manager or administrator role.");
+      }
+      if (state.attendanceCorrected) return state;
+      const beforeAttendance = state.forecast.expectedAttendance;
+      const corrected = applyAttendanceCorrection(state.forecast);
       return {
         ...state,
         attendanceCorrected: true,
-        forecast: {
-          ...state.forecast,
-          expectedAttendance: 540,
-          intervalLow: 512,
-          intervalHigh: 568,
-          recommendedPrep: 575,
-          preventableSurplus: 155,
-          influences: state.forecast.influences.map((i) =>
-            i.factor.startsWith("Grade 10 field trip")
-              ? { ...i, magnitude: 0, note: "Trip cancelled — input removed" }
-              : i,
-          ),
-        },
+        forecast: corrected,
+        approvedRecommendationKey: null,
         audit: withAudit(state, {
-          actor: "Daniel Brooks",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: "Approved attendance correction",
-          before: "Expected 468 students (trip out)",
+          before: `Expected ${beforeAttendance} students (model baseline)`,
           after: "Expected 540 students (trip cancelled)",
           reason: "Field trip cancelled by district",
           reversible: true,
         }),
       };
+    }
     case "SEND_PROVISIONAL_ALERTS": {
+      if (!guardRole(state, "SEND_PROVISIONAL_ALERTS")) {
+        return denied(state, "SEND_PROVISIONAL_ALERTS", "Requires manager or administrator role.");
+      }
       const eligible = state.partners.filter((p) => p.status === "available");
       const messages = eligible.reduce<Message[]>((acc, p) => {
         return [
           ...acc,
           {
             id: uid(),
-            ts: new Date().toISOString(),
+            ts: nextDemoTimestamp(),
             threadId: `t-${p.id}`,
             fromRole: "manager",
             fromName: "Lincoln Heights HS",
             kind: "alert",
-            body: `Provisional surplus alert for Thursday 03/12. Estimated 60–95 packaged meals. Not yet a confirmed donation — please reserve tentative capacity.`,
+            body: `Provisional surplus alert for Thursday ${formatFocusDateSlash()}. Estimated 60–95 packaged meals. Not yet a confirmed donation — please reserve tentative capacity.`,
             meta: { range: "60–95", category: "packaged" },
           },
         ];
@@ -190,7 +251,7 @@ function reducer(state: State, action: Action): State {
         ...state,
         messages: [...state.messages, ...messages],
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: `Sent provisional surplus alert to ${eligible.length} partners`,
           reason: "AI Copilot drafted alert, human approved sending",
@@ -199,6 +260,9 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "PARTNER_RESERVE": {
+      if (!guardRole(state, "PARTNER_RESERVE")) {
+        return denied(state, "PARTNER_RESERVE", "Requires partner, manager, or administrator role.");
+      }
       const existing = state.matches.find((m) => m.partnerId === action.partnerId);
       const matches = existing
         ? state.matches.map((m) =>
@@ -211,66 +275,85 @@ function reducer(state: State, action: Action): State {
         matches,
         messages: withMessage(state, {
           threadId: `t-${action.partnerId}`,
-          fromRole: "partner",
-          fromName: partner.name,
+          fromRole: state.role === "partner" ? "partner" : "manager",
+          fromName: state.role === "partner" ? partner.name : "Lincoln Heights HS",
           kind: "reservation",
           body: `Reserved tentative capacity for up to ${action.meals} packaged meals. Pickup window ${partner.windowStart}–${partner.windowEnd}.`,
           meta: { meals: action.meals },
         }),
         audit: withAudit(state, {
-          actor: partner.name,
-          actorType: "partner",
+          actor: state.role === "partner" ? partner.name : ACTOR_NAMES[state.role],
+          actorType: state.role === "partner" ? "partner" : "human",
           action: `Reserved ${action.meals} meals (provisional)`,
           reversible: true,
         }),
       };
     }
     case "PARTNER_DECLINE": {
+      if (!guardRole(state, "PARTNER_DECLINE")) {
+        return denied(state, "PARTNER_DECLINE", "Requires partner, manager, or administrator role.");
+      }
       const partner = state.partners.find((p) => p.id === action.partnerId)!;
       return {
         ...state,
         audit: withAudit(state, {
           actor: partner.name,
           actorType: "partner",
-          action: `Declined provisional alert`,
+          action: "Declined provisional alert",
           reason: "Capacity unavailable in window",
           reversible: false,
         }),
       };
     }
-    case "CONFIRM_SURPLUS":
+    case "CONFIRM_SURPLUS": {
+      if (!guardRole(state, "CONFIRM_SURPLUS")) {
+        return denied(state, "CONFIRM_SURPLUS", "Requires manager or administrator role.");
+      }
+      if (state.surplusConfirmed != null) return state;
       return {
         ...state,
         surplusConfirmed: action.meals,
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: `Confirmed ${action.meals} recoverable meals`,
           reason: "Day-of measurement after service",
           reversible: false,
         }),
       };
-    case "COMPLETE_CHECKLIST":
+    }
+    case "COMPLETE_CHECKLIST": {
+      if (!guardRole(state, "COMPLETE_CHECKLIST")) {
+        return denied(state, "COMPLETE_CHECKLIST", "Requires manager or administrator role.");
+      }
+      if (state.checklistComplete) return state;
       return {
         ...state,
         checklistComplete: true,
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: "Completed recovery eligibility checklist",
           reason: "All seven items verified by qualified staff",
           reversible: false,
         }),
       };
+    }
     case "SELECT_PARTNER": {
+      if (!guardRole(state, "SELECT_PARTNER")) {
+        return denied(state, "SELECT_PARTNER", "Requires manager or administrator role.");
+      }
+      const check = assertCanSelectPartner(state.surplusConfirmed, state.checklistComplete);
+      if (!check.ok) return denied(state, "SELECT_PARTNER", check.reason);
       const partner = state.partners.find((p) => p.id === action.partnerId)!;
       const pickup: Pickup = {
         id: uid(),
         partnerId: action.partnerId,
         meals: action.meals,
         status: "partner-selected",
-        eta: "14:25",
-        createdAt: new Date().toISOString(),
+        eta: computePickupEta(partner),
+        createdAt: nextDemoTimestamp(),
+        impactRecorded: false,
       };
       return {
         ...state,
@@ -280,7 +363,7 @@ function reducer(state: State, action: Action): State {
         ],
         pickups: [...state.pickups, pickup],
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: `Assigned pickup to ${partner.name}`,
           after: `${action.meals} meals reserved`,
@@ -289,14 +372,33 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "OVERRIDE_PARTNER": {
+      if (!guardRole(state, "OVERRIDE_PARTNER")) {
+        return denied(state, "OVERRIDE_PARTNER", "Requires manager or administrator role.");
+      }
+      const pickup = state.pickups.find((p) => p.partnerId === action.previousId) ?? state.pickups[0];
+      const overrideCheck = assertCanOverridePartner(state.surplusConfirmed, state.checklistComplete, !!pickup);
+      if (!overrideCheck.ok) return denied(state, "OVERRIDE_PARTNER", overrideCheck.reason);
+      if (!pickup || pickup.partnerId === action.partnerId) return state;
       const prev = state.partners.find((p) => p.id === action.previousId)!;
       const next = state.partners.find((p) => p.id === action.partnerId)!;
+      const updatedPickups = state.pickups.map((p) =>
+        p.id === pickup.id
+          ? { ...p, partnerId: action.partnerId, eta: computePickupEta(next) }
+          : p,
+      );
+      const matches = [
+        ...state.matches.filter((m) => m.partnerId !== action.previousId && m.partnerId !== action.partnerId),
+        { partnerId: action.previousId, state: "reserved" as const, reservedMeals: pickup.meals },
+        { partnerId: action.partnerId, state: "confirmed" as const, reservedMeals: pickup.meals },
+      ];
       return {
         ...state,
+        pickups: updatedPickups,
+        matches,
         audit: withAudit(state, {
-          actor: "Maya Rodriguez",
+          actor: ACTOR_NAMES[state.role],
           actorType: "human",
-          action: `Overrode AI partner ranking`,
+          action: "Overrode AI partner ranking",
           before: prev.name,
           after: next.name,
           reason: action.reason,
@@ -305,21 +407,40 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "ADVANCE_PICKUP": {
+      if (!guardRole(state, "ADVANCE_PICKUP")) {
+        return denied(state, "ADVANCE_PICKUP", "Requires partner, manager, or administrator role.");
+      }
       const pickup = state.pickups.find((p) => p.id === action.pickupId);
       if (!pickup) return state;
-      const updated = state.pickups.map((p) => (p.id === action.pickupId ? { ...p, status: action.status } : p));
+      const mono = assertMonotonicPickupAdvance(pickup.status, action.status);
+      if (!mono.ok) return denied(state, "ADVANCE_PICKUP", mono.reason);
+      const routeCheck = assertCanAdvanceBeyondSurplusConfirmed(
+        action.status,
+        state.surplusConfirmed,
+        state.checklistComplete,
+      );
+      if (!routeCheck.ok) return denied(state, "ADVANCE_PICKUP", routeCheck.reason);
+      const updated = state.pickups.map((p) =>
+        p.id === action.pickupId ? { ...p, status: action.status } : p,
+      );
       let impact = state.impact;
-      if (action.status === "distribution-confirmed") {
+      let pickupsFinal = updated;
+      if (action.status === "distribution-confirmed" && !pickup.impactRecorded) {
         impact = {
           ...impact,
           recoveredMeals: impact.recoveredMeals + pickup.meals,
           studentsServed: impact.studentsServed + pickup.meals,
           pickupsCompleted: impact.pickupsCompleted + 1,
         };
+        pickupsFinal = updated.map((p) =>
+          p.id === action.pickupId ? { ...p, impactRecorded: true } : p,
+        );
+      } else if (action.status === "distribution-confirmed" && pickup.impactRecorded) {
+        return state;
       }
       return {
         ...state,
-        pickups: updated,
+        pickups: pickupsFinal,
         impact,
         audit: withAudit(state, {
           actor: state.partners.find((p) => p.id === pickup.partnerId)!.name,
@@ -342,14 +463,30 @@ function reducer(state: State, action: Action): State {
 
 const Ctx = createContext<{ state: State; dispatch: React.Dispatch<Action> } | null>(null);
 
-const STORAGE_KEY = "ssp_state_v1";
+const STORAGE_KEY = "ssp_state_v2";
+
+function hydrateState(raw: string): State {
+  try {
+    const parsed = JSON.parse(raw) as Partial<State> & { approvedRecommendation?: boolean };
+    const base = { ...INITIAL, ...parsed } as State;
+    if (!("approvedRecommendationKey" in parsed) && parsed.approvedRecommendation) {
+      base.approvedRecommendationKey = buildRecommendationKey(base.forecast);
+    }
+    delete (base as { approvedRecommendation?: boolean }).approvedRecommendation;
+    return base;
+  } catch {
+    return INITIAL;
+  }
+}
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL, (init) => {
     if (typeof window === "undefined") return init;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...init, ...JSON.parse(raw) } as State;
+      if (raw) return hydrateState(raw);
+      const legacy = window.localStorage.getItem("ssp_state_v1");
+      if (legacy) return hydrateState(legacy);
     } catch {}
     return init;
   });
