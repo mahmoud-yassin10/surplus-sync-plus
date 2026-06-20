@@ -218,8 +218,8 @@ export function reducer(state: State, action: Action): State {
         approvedRecommendationKey: key,
         impact: {
           ...state.impact,
-          preventedMeals: state.impact.preventedMeals + preventedMeals,
-          costSaved: state.impact.costSaved + costSaved,
+          preventedMeals,
+          costSaved,
         },
         audit: withAudit(state, {
           actor: ACTOR_NAMES[state.role],
@@ -312,7 +312,11 @@ export function reducer(state: State, action: Action): State {
     }
     case "CANCEL_PROVISIONAL_ALERTS": {
       if (!guardRole(state, "CANCEL_PROVISIONAL_ALERTS")) {
-        return denied(state, "CANCEL_PROVISIONAL_ALERTS", "Requires manager or administrator role.");
+        return denied(
+          state,
+          "CANCEL_PROVISIONAL_ALERTS",
+          "Requires manager or administrator role.",
+        );
       }
       if (!state.audit.some((a) => a.action.startsWith("Sent provisional surplus alert"))) {
         return state;

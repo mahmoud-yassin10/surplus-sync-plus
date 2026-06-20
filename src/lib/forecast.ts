@@ -60,6 +60,11 @@ export function computePreventedImpact(
   return { preventedMeals, costSaved: preventedMeals * MEAL_UNIT_COST };
 }
 
+export type ImpactCategoryDisclosure = {
+  title: "Prevented" | "Recovered" | "Nonrecoverable" | "Forecast accuracy";
+  desc: string;
+};
+
 export function applyAttendanceCorrection(forecast: Forecast): Forecast {
   return {
     ...forecast,
@@ -290,4 +295,22 @@ export function preventedMealsDerivation(view: ForecastView): string {
 export function preventedMealsDescription(view: ForecastView): string {
   const label = recommendationStatusLabel(view.approvedForCurrentRecommendation);
   return `Difference between the baseline ${view.baselinePrep}-meal plan and the ${label} (${view.recommendedPrep} meals). Counted only when a human approves a reduced plan before service.`;
+}
+
+export function impactCategoryDisclosures(view: ForecastView): ImpactCategoryDisclosure[] {
+  return [
+    { title: "Prevented", desc: preventedMealsDescription(view) },
+    {
+      title: "Recovered",
+      desc: "Observed meals confirmed safe after service and successfully distributed by a verified partner.",
+    },
+    {
+      title: "Nonrecoverable",
+      desc: "Observed surplus that fails the human-completed eligibility checklist or expires before pickup.",
+    },
+    {
+      title: "Forecast accuracy",
+      desc: "Rolling 30-day mean absolute percentage error of attendance prediction. Updated nightly.",
+    },
+  ];
 }
