@@ -19,9 +19,15 @@ function runGuidedWorkflow() {
     () => {},
     () => {},
     () => {},
-    () => { state = reducer(state, { type: "CORRECT_ATTENDANCE" }); },
-    () => { state = reducer(state, { type: "SEND_PROVISIONAL_ALERTS" }); },
-    () => { state = reducer(state, { type: "PARTNER_RESERVE", partnerId: "p1", meals: 95 }); },
+    () => {
+      state = reducer(state, { type: "CORRECT_ATTENDANCE" });
+    },
+    () => {
+      state = reducer(state, { type: "SEND_PROVISIONAL_ALERTS" });
+    },
+    () => {
+      state = reducer(state, { type: "PARTNER_RESERVE", partnerId: "p1", meals: 95 });
+    },
     () => {
       state = reducer(state, { type: "CONFIRM_SURPLUS", meals: 64 });
       state = reducer(state, { type: "COMPLETE_CHECKLIST" });
@@ -74,7 +80,7 @@ describe("guided demo workflow", () => {
   });
 
   it("provisional reserve works before surplus confirmation", () => {
-    let state = reducer(INITIAL, { type: "PARTNER_RESERVE", partnerId: "p1", meals: 95 });
+    const state = reducer(INITIAL, { type: "PARTNER_RESERVE", partnerId: "p1", meals: 95 });
     expect(state.surplusConfirmed).toBeNull();
     expect(state.matches[0].state).toBe("reserved");
   });

@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 import { Page, Section } from "../components/shell/AppShell";
 import { ApprovalGate } from "../components/approval/ApprovalGate";
 import { ATTENDANCE_HISTORY } from "../lib/mock";
@@ -13,7 +21,11 @@ export const Route = createFileRoute("/attendance")({
 
 function Attendance() {
   const { state, dispatch } = useStore();
-  const data = ATTENDANCE_HISTORY.map((a) => ({ date: a.date.slice(5), expected: a.expected, actual: a.actual }));
+  const data = ATTENDANCE_HISTORY.map((a) => ({
+    date: a.date.slice(5),
+    expected: a.expected,
+    actual: a.actual,
+  }));
 
   return (
     <Page kicker="Students & attendance" title="Attendance trend">
@@ -23,11 +35,36 @@ function Attendance() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid stroke="var(--color-line)" strokeDasharray="2 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--color-text-faint)" }} stroke="var(--color-line)" />
-                <YAxis tick={{ fontSize: 10, fill: "var(--color-text-faint)" }} stroke="var(--color-line)" />
-                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 6, border: "1px solid var(--color-line)" }} />
-                <Line type="monotone" dataKey="expected" stroke="var(--color-ai)" strokeWidth={1.6} dot={false} />
-                <Line type="monotone" dataKey="actual" stroke="var(--color-success)" strokeWidth={1.6} dot={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "var(--color-text-faint)" }}
+                  stroke="var(--color-line)"
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "var(--color-text-faint)" }}
+                  stroke="var(--color-line)"
+                />
+                <Tooltip
+                  contentStyle={{
+                    fontSize: 11,
+                    borderRadius: 6,
+                    border: "1px solid var(--color-line)",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expected"
+                  stroke="var(--color-ai)"
+                  strokeWidth={1.6}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="actual"
+                  stroke="var(--color-success)"
+                  strokeWidth={1.6}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -49,7 +86,11 @@ function Attendance() {
             before={`Expected ${state.forecast.expectedAttendance} students (model baseline)`}
             after="Expected 540 students (trip cancelled)"
             consequences={`Recalculates Thursday forecast: recommended prep ${state.attendanceCorrected ? 575 : state.forecast.recommendedPrep} → 575 meals. Attendance records updated.`}
-            risks={state.attendanceCorrected ? undefined : "Reverses if district reinstates the trip before service."}
+            risks={
+              state.attendanceCorrected
+                ? undefined
+                : "Reverses if district reinstates the trip before service."
+            }
             reversible
             status={state.attendanceCorrected ? "approved" : "pending"}
             onApprove={() => dispatch({ type: "CORRECT_ATTENDANCE" })}
@@ -64,7 +105,9 @@ function Attendance() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-md border border-[var(--color-line)] p-3">
-      <div className="text-[10.5px] uppercase tracking-wider text-[var(--color-text-faint)]">{label}</div>
+      <div className="text-[10.5px] uppercase tracking-wider text-[var(--color-text-faint)]">
+        {label}
+      </div>
       <div className="text-[18px] font-semibold tnum mt-0.5">{value}</div>
     </div>
   );

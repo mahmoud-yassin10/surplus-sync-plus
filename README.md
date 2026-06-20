@@ -21,7 +21,9 @@ Then open `http://localhost:3000`. Use the **Start guided demo** button in the
 top bar to walk through the full demonstration in nine steps. **Reset demo**
 restores the initial state at any time.
 
-Run `bun run test:run` (or `npm run test:run`) for reducer and workflow tests.
+Run `bun run test:run` for reducer and workflow tests.
+
+This repository uses **Bun** as its package manager (`bun.lock`). Do not add `package-lock.json`.
 
 ## Frontend architecture
 

@@ -164,7 +164,10 @@ export function reducer(state: State, action: Action): State {
       if (state.approvedRecommendationKey === key) return state;
       const planCheck = assertCanApplyRecommendation(state.forecast);
       if (!planCheck.ok) return denied(state, "APPLY_RECOMMENDATION", planCheck.reason);
-      const { preventedMeals, costSaved } = computePreventedImpact(SCHOOL.normalPrep, state.forecast.recommendedPrep);
+      const { preventedMeals, costSaved } = computePreventedImpact(
+        SCHOOL.normalPrep,
+        state.forecast.recommendedPrep,
+      );
       return {
         ...state,
         currentPlan: state.forecast.recommendedPrep,
@@ -261,14 +264,27 @@ export function reducer(state: State, action: Action): State {
     }
     case "PARTNER_RESERVE": {
       if (!guardRole(state, "PARTNER_RESERVE")) {
-        return denied(state, "PARTNER_RESERVE", "Requires partner, manager, or administrator role.");
+        return denied(
+          state,
+          "PARTNER_RESERVE",
+          "Requires partner, manager, or administrator role.",
+        );
       }
       const existing = state.matches.find((m) => m.partnerId === action.partnerId);
       const matches = existing
         ? state.matches.map((m) =>
-            m.partnerId === action.partnerId ? { ...m, state: "reserved" as const, reservedMeals: action.meals } : m,
+            m.partnerId === action.partnerId
+              ? { ...m, state: "reserved" as const, reservedMeals: action.meals }
+              : m,
           )
-        : [...state.matches, { partnerId: action.partnerId, state: "reserved" as const, reservedMeals: action.meals }];
+        : [
+            ...state.matches,
+            {
+              partnerId: action.partnerId,
+              state: "reserved" as const,
+              reservedMeals: action.meals,
+            },
+          ];
       const partner = state.partners.find((p) => p.id === action.partnerId)!;
       return {
         ...state,
@@ -291,7 +307,11 @@ export function reducer(state: State, action: Action): State {
     }
     case "PARTNER_DECLINE": {
       if (!guardRole(state, "PARTNER_DECLINE")) {
-        return denied(state, "PARTNER_DECLINE", "Requires partner, manager, or administrator role.");
+        return denied(
+          state,
+          "PARTNER_DECLINE",
+          "Requires partner, manager, or administrator role.",
+        );
       }
       const partner = state.partners.find((p) => p.id === action.partnerId)!;
       return {
@@ -375,19 +395,24 @@ export function reducer(state: State, action: Action): State {
       if (!guardRole(state, "OVERRIDE_PARTNER")) {
         return denied(state, "OVERRIDE_PARTNER", "Requires manager or administrator role.");
       }
-      const pickup = state.pickups.find((p) => p.partnerId === action.previousId) ?? state.pickups[0];
-      const overrideCheck = assertCanOverridePartner(state.surplusConfirmed, state.checklistComplete, !!pickup);
+      const pickup =
+        state.pickups.find((p) => p.partnerId === action.previousId) ?? state.pickups[0];
+      const overrideCheck = assertCanOverridePartner(
+        state.surplusConfirmed,
+        state.checklistComplete,
+        !!pickup,
+      );
       if (!overrideCheck.ok) return denied(state, "OVERRIDE_PARTNER", overrideCheck.reason);
       if (!pickup || pickup.partnerId === action.partnerId) return state;
       const prev = state.partners.find((p) => p.id === action.previousId)!;
       const next = state.partners.find((p) => p.id === action.partnerId)!;
       const updatedPickups = state.pickups.map((p) =>
-        p.id === pickup.id
-          ? { ...p, partnerId: action.partnerId, eta: computePickupEta(next) }
-          : p,
+        p.id === pickup.id ? { ...p, partnerId: action.partnerId, eta: computePickupEta(next) } : p,
       );
       const matches = [
-        ...state.matches.filter((m) => m.partnerId !== action.previousId && m.partnerId !== action.partnerId),
+        ...state.matches.filter(
+          (m) => m.partnerId !== action.previousId && m.partnerId !== action.partnerId,
+        ),
         { partnerId: action.previousId, state: "reserved" as const, reservedMeals: pickup.meals },
         { partnerId: action.partnerId, state: "confirmed" as const, reservedMeals: pickup.meals },
       ];
@@ -465,7 +490,7 @@ const Ctx = createContext<{ state: State; dispatch: React.Dispatch<Action> } | n
 
 const STORAGE_KEY = "ssp_state_v2";
 
-function hydrateState(raw: string): State {
+export function hydrateState(raw: string): State {
   try {
     const parsed = JSON.parse(raw) as Partial<State> & { approvedRecommendation?: boolean };
     const base = { ...INITIAL, ...parsed } as State;
@@ -487,7 +512,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       if (raw) return hydrateState(raw);
       const legacy = window.localStorage.getItem("ssp_state_v1");
       if (legacy) return hydrateState(legacy);
-    } catch {}
+    } catch {
+      /* ignore corrupt localStorage */
+    }
     return init;
   });
 
@@ -495,7 +522,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {}
+    } catch {
+      /* ignore corrupt localStorage */
+    }
   }, [state]);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);

@@ -22,17 +22,26 @@ export function stageIndex(status: PickupStatus): number {
 
 export function assertPlanAboveFloor(meals: number): InvariantResult {
   if (meals < SAFETY_FLOOR) {
-    return { ok: false, reason: `Preparation plan ${meals} is below the ${SAFETY_FLOOR}-meal safety floor.` };
+    return {
+      ok: false,
+      reason: `Preparation plan ${meals} is below the ${SAFETY_FLOOR}-meal safety floor.`,
+    };
   }
   return { ok: true };
 }
 
-export function assertCanSelectPartner(surplusConfirmed: number | null, checklistComplete: boolean): InvariantResult {
+export function assertCanSelectPartner(
+  surplusConfirmed: number | null,
+  checklistComplete: boolean,
+): InvariantResult {
   if (surplusConfirmed == null) {
     return { ok: false, reason: "Surplus must be confirmed before selecting a partner." };
   }
   if (!checklistComplete) {
-    return { ok: false, reason: "Recovery eligibility checklist must be complete before partner selection." };
+    return {
+      ok: false,
+      reason: "Recovery eligibility checklist must be complete before partner selection.",
+    };
   }
   return { ok: true };
 }
@@ -57,19 +66,31 @@ export function assertCanAdvanceBeyondSurplusConfirmed(
     return { ok: true };
   }
   if (surplusConfirmed == null) {
-    return { ok: false, reason: "Surplus must be confirmed before routing beyond surplus-confirmed." };
+    return {
+      ok: false,
+      reason: "Surplus must be confirmed before routing beyond surplus-confirmed.",
+    };
   }
   if (!checklistComplete) {
-    return { ok: false, reason: "Checklist must be complete before routing beyond surplus-confirmed." };
+    return {
+      ok: false,
+      reason: "Checklist must be complete before routing beyond surplus-confirmed.",
+    };
   }
   return { ok: true };
 }
 
-export function assertMonotonicPickupAdvance(current: PickupStatus, next: PickupStatus): InvariantResult {
+export function assertMonotonicPickupAdvance(
+  current: PickupStatus,
+  next: PickupStatus,
+): InvariantResult {
   const cur = stageIndex(current);
   const nxt = stageIndex(next);
   if (nxt !== cur + 1) {
-    return { ok: false, reason: `Pickup can only advance one stage at a time (${current} → ${next}).` };
+    return {
+      ok: false,
+      reason: `Pickup can only advance one stage at a time (${current} → ${next}).`,
+    };
   }
   return { ok: true };
 }

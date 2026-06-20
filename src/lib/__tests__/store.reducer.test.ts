@@ -90,7 +90,11 @@ describe("store reducer", () => {
       state = apply(state, { type: "ADVANCE_PICKUP", pickupId, status });
     }
     const onceImpact = state.impact.recoveredMeals;
-    const again = apply(state, { type: "ADVANCE_PICKUP", pickupId, status: "distribution-confirmed" });
+    const again = apply(state, {
+      type: "ADVANCE_PICKUP",
+      pickupId,
+      status: "distribution-confirmed",
+    });
     expect(again.impact.recoveredMeals).toBe(onceImpact);
     expect(again.pickups[0].impactRecorded).toBe(true);
   });
@@ -103,6 +107,8 @@ describe("store reducer", () => {
   });
 
   it("recommendation key matches forecast fields", () => {
-    expect(buildRecommendationKey(INITIAL.forecast)).toBe(INITIAL.forecast.date + "|ssp-forecast-1.0|528|562");
+    expect(buildRecommendationKey(INITIAL.forecast)).toBe(
+      INITIAL.forecast.date + "|ssp-forecast-1.0|528|562",
+    );
   });
 });

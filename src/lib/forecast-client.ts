@@ -41,12 +41,16 @@ export class HttpForecastProvider implements ForecastProvider {
 
   async getForecast(_date: string): Promise<Forecast> {
     void this.baseUrl;
-    throw new Error("HTTP forecast provider is not enabled. Use LocalForecastProvider for offline demo.");
+    throw new Error(
+      "HTTP forecast provider is not enabled. Use LocalForecastProvider for offline demo.",
+    );
   }
 
   async getHorizon(): Promise<HorizonDay[]> {
     void this.baseUrl;
-    throw new Error("HTTP forecast provider is not enabled. Use LocalForecastProvider for offline demo.");
+    throw new Error(
+      "HTTP forecast provider is not enabled. Use LocalForecastProvider for offline demo.",
+    );
   }
 }
 

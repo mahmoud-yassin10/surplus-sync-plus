@@ -17,13 +17,25 @@ const RISK_COLOR: Record<string, string> = {
   critical: "var(--color-critical)",
 };
 
-export function HorizonRibbon({ onSelectDate, selected, horizonDays = HORIZON_DAYS }: { onSelectDate?: (d: string) => void; selected?: string; horizonDays?: HorizonDay[] }) {
+export function HorizonRibbon({
+  onSelectDate,
+  selected,
+  horizonDays = HORIZON_DAYS,
+}: {
+  onSelectDate?: (d: string) => void;
+  selected?: string;
+  horizonDays?: HorizonDay[];
+}) {
   return (
     <div className="px-4 py-4">
       <div className="flex items-end justify-between mb-3 gap-3">
         <div>
-          <div className="text-[10.5px] uppercase tracking-[0.16em] text-[var(--color-text-faint)]">Forecast horizon</div>
-          <div className="text-[12.5px] text-[var(--color-text-soft)]">Next 10 school days · attendance, events, preventable surplus</div>
+          <div className="text-[10.5px] uppercase tracking-[0.16em] text-[var(--color-text-faint)]">
+            Forecast horizon
+          </div>
+          <div className="text-[12.5px] text-[var(--color-text-soft)]">
+            Next 10 school days · attendance, events, preventable surplus
+          </div>
         </div>
         <div className="hidden md:flex items-center gap-3 text-[11px] text-[var(--color-text-soft)]">
           <Legend dot="var(--color-success)" label="Low" />
@@ -50,19 +62,30 @@ export function HorizonRibbon({ onSelectDate, selected, horizonDays = HORIZON_DA
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-faint)]">{d.label}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-faint)]">
+                    {d.label}
+                  </div>
                   <div className="text-[13px] font-semibold tnum">{d.date.slice(8)}</div>
                 </div>
                 {isFocus && (
                   <span className="relative inline-flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full rounded-full opacity-60 pulse-dot" style={{ background: color }} />
-                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: color }} />
+                    <span
+                      className="absolute inline-flex h-full w-full rounded-full opacity-60 pulse-dot"
+                      style={{ background: color }}
+                    />
+                    <span
+                      className="relative inline-flex h-2 w-2 rounded-full"
+                      style={{ background: color }}
+                    />
                   </span>
                 )}
               </div>
 
               <div className="mt-2 flex items-end gap-1 h-[56px]">
-                <div className="flex-1 rounded-sm" style={{ height: barH, background: color, opacity: 0.85 }} />
+                <div
+                  className="flex-1 rounded-sm"
+                  style={{ height: barH, background: color, opacity: 0.85 }}
+                />
               </div>
 
               <div className="mt-1 text-[10.5px] text-[var(--color-text-faint)] tnum">
@@ -73,9 +96,15 @@ export function HorizonRibbon({ onSelectDate, selected, horizonDays = HORIZON_DA
                 <div className="mt-1 flex flex-wrap gap-1">
                   {d.events.slice(0, 3).map((ev) => {
                     const Ic = ICONS[ev];
-                    return Ic ? <Ic key={ev} size={10} className="text-[var(--color-text-faint)]" /> : null;
+                    return Ic ? (
+                      <Ic key={ev} size={10} className="text-[var(--color-text-faint)]" />
+                    ) : null;
                   })}
-                  {d.events.length > 3 && <span className="text-[9px] text-[var(--color-text-faint)]">+{d.events.length - 3}</span>}
+                  {d.events.length > 3 && (
+                    <span className="text-[9px] text-[var(--color-text-faint)]">
+                      +{d.events.length - 3}
+                    </span>
+                  )}
                 </div>
               )}
             </button>

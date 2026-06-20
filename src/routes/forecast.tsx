@@ -17,21 +17,38 @@ function Forecast() {
   const view = forecastViewFromState(state);
 
   return (
-    <Page kicker="Daily forecast" title={view.focusDateLong}
-      actions={<>
-        <EvidenceTrigger />
-        <Link to="/decision" className="text-[12px] px-3 py-1.5 rounded-md border border-[var(--color-line)]">Decision Canvas →</Link>
-      </>}
+    <Page
+      kicker="Daily forecast"
+      title={view.focusDateLong}
+      actions={
+        <>
+          <EvidenceTrigger />
+          <Link
+            to="/decision"
+            className="text-[12px] px-3 py-1.5 rounded-md border border-[var(--color-line)]"
+          >
+            Decision Canvas →
+          </Link>
+        </>
+      }
     >
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5">
         <div className="space-y-5">
-          <Section title="Demand forecast" hint={`Model ${f.modelVersion} · data quality ${f.dataQuality}`}>
+          <Section
+            title="Demand forecast"
+            hint={`Model ${f.modelVersion} · data quality ${f.dataQuality}`}
+          >
             <div className="p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
               <Big label="Expected attendance" value={f.expectedAttendance} unit="students" />
               <Big label="80% interval" value={view.intervalLabel} unit="students" />
               <Big label="Recommended prep" value={f.recommendedPrep} tone="ai" unit="meals" />
               <Big label="Shortage probability" value={`${(f.shortageProb * 100).toFixed(1)}%`} />
-              <Big label="Preventable surplus" value={f.preventableSurplus} tone="critical" unit="meals" />
+              <Big
+                label="Preventable surplus"
+                value={f.preventableSurplus}
+                tone="critical"
+                unit="meals"
+              />
               <Big label="Large-surplus prob" value={`${(f.largeSurplusProb * 100).toFixed(0)}%`} />
               <Big label="Safety buffer" value={`+${view.safetyBuffer}`} unit="above 80% upper" />
               <Big label="Max safe reduction" value={`${view.maxSafeReduction}`} unit="meals" />
@@ -72,24 +89,46 @@ function Forecast() {
                   <CheckCircle2 size={12} /> Approved · current plan {state.currentPlan}
                 </span>
               )}
-              <Link to="/decision" className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] flex items-center gap-1.5">Modify in Decision Canvas <ChevronRight size={12} /></Link>
-              <button className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] text-[var(--color-critical)] flex items-center gap-1.5"><X size={12} /> Reject recommendation</button>
-              <button onClick={() => dispatch({ type: "TOGGLE_AI" })} className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]">{state.aiMode ? "Switch to manual mode" : "Re-enable AI"}</button>
+              <Link
+                to="/decision"
+                className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] flex items-center gap-1.5"
+              >
+                Modify in Decision Canvas <ChevronRight size={12} />
+              </Link>
+              <button className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)] text-[var(--color-critical)] flex items-center gap-1.5">
+                <X size={12} /> Reject recommendation
+              </button>
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_AI" })}
+                className="text-[12px] px-3 py-2 rounded-md border border-[var(--color-line)]"
+              >
+                {state.aiMode ? "Switch to manual mode" : "Re-enable AI"}
+              </button>
             </div>
           </Section>
         </div>
 
         <div className="space-y-5">
-          <Section title="Top influential inputs" right={<Sparkles size={13} className="text-[var(--color-ai)]" />}>
+          <Section
+            title="Top influential inputs"
+            right={<Sparkles size={13} className="text-[var(--color-ai)]" />}
+          >
             <ul className="divide-y divide-[var(--color-line)]">
               {f.influences.map((i) => (
                 <li key={i.factor} className="px-4 py-2.5">
                   <div className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${i.direction === "down" ? "bg-[var(--color-critical)]" : "bg-[var(--color-success)]"}`} />
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${i.direction === "down" ? "bg-[var(--color-critical)]" : "bg-[var(--color-success)]"}`}
+                    />
                     <span className="text-[12.5px] text-[var(--color-text)]">{i.factor}</span>
-                    <span className="ml-auto tnum text-[11.5px] text-[var(--color-text-soft)]">{i.direction === "down" ? "−" : "+"}{i.magnitude}</span>
+                    <span className="ml-auto tnum text-[11.5px] text-[var(--color-text-soft)]">
+                      {i.direction === "down" ? "−" : "+"}
+                      {i.magnitude}
+                    </span>
                   </div>
-                  <div className="text-[10.5px] text-[var(--color-text-faint)] pl-3.5 mt-0.5">{i.note}</div>
+                  <div className="text-[10.5px] text-[var(--color-text-faint)] pl-3.5 mt-0.5">
+                    {i.note}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -112,7 +151,9 @@ function Forecast() {
           <Section title="Manual corrections">
             <div className="p-4 text-[12px] text-[var(--color-text-soft)]">
               {state.attendanceCorrected ? (
-                <span className="inline-flex items-center gap-1.5 text-[var(--color-success)]"><CheckCircle2 size={12} /> Trip cancelled — attendance corrected to 540.</span>
+                <span className="inline-flex items-center gap-1.5 text-[var(--color-success)]">
+                  <CheckCircle2 size={12} /> Trip cancelled — attendance corrected to 540.
+                </span>
               ) : (
                 <>No human corrections on this forecast.</>
               )}
@@ -124,8 +165,23 @@ function Forecast() {
   );
 }
 
-function Big({ label, value, unit, tone }: { label: string; value: any; unit?: string; tone?: "ai" | "critical" }) {
-  const c = tone === "ai" ? "text-[var(--color-ai)]" : tone === "critical" ? "text-[var(--color-critical)]" : "text-[var(--color-text)]";
+function Big({
+  label,
+  value,
+  unit,
+  tone,
+}: {
+  label: string;
+  value: any;
+  unit?: string;
+  tone?: "ai" | "critical";
+}) {
+  const c =
+    tone === "ai"
+      ? "text-[var(--color-ai)]"
+      : tone === "critical"
+        ? "text-[var(--color-critical)]"
+        : "text-[var(--color-text)]";
   return (
     <div className="rounded-md border border-[var(--color-line)] p-3">
       <StatLabel>{label}</StatLabel>

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { defaultForecastProvider, HttpForecastProvider, LocalForecastProvider } from "../forecast-client";
+import {
+  defaultForecastProvider,
+  HttpForecastProvider,
+  LocalForecastProvider,
+} from "../forecast-client";
 import { DEMO_FOCUS_DATE } from "../demo-date";
 
 describe("forecast-client", () => {

@@ -1,5 +1,10 @@
 import type { Forecast, ForecastView, HorizonDay, RecoveryPartner } from "./types";
-import { DEMO_FOCUS_DATE, formatFocusDateLong, formatFocusDateShort, formatFocusDateSlash } from "./demo-date";
+import {
+  DEMO_FOCUS_DATE,
+  formatFocusDateLong,
+  formatFocusDateShort,
+  formatFocusDateSlash,
+} from "./demo-date";
 import { SCHOOL } from "./mock";
 
 export const SAFETY_FLOOR = 540;
@@ -42,7 +47,10 @@ export function computePlanDelta(currentPlan: number, recommendedPrep: number): 
   return currentPlan - recommendedPrep;
 }
 
-export function computePreventedImpact(baselinePrep: number, approvedPlan: number): { preventedMeals: number; costSaved: number } {
+export function computePreventedImpact(
+  baselinePrep: number,
+  approvedPlan: number,
+): { preventedMeals: number; costSaved: number } {
   const preventedMeals = Math.max(0, baselinePrep - approvedPlan);
   return { preventedMeals, costSaved: preventedMeals * MEAL_UNIT_COST };
 }
@@ -64,7 +72,11 @@ export function applyAttendanceCorrection(forecast: Forecast): Forecast {
   };
 }
 
-export function syncHorizonFocusDay(horizon: HorizonDay[], forecast: Forecast, currentPlan: number): HorizonDay[] {
+export function syncHorizonFocusDay(
+  horizon: HorizonDay[],
+  forecast: Forecast,
+  currentPlan: number,
+): HorizonDay[] {
   return horizon.map((day) =>
     day.date === forecast.date
       ? {
@@ -155,7 +167,13 @@ export type CopilotReply = {
   title: string;
   body: string;
   evidence?: string[];
-  proposal?: { before: string; after: string; consequences: string; reversible: boolean; actionType: "SEND_PROVISIONAL_ALERTS" };
+  proposal?: {
+    before: string;
+    after: string;
+    consequences: string;
+    reversible: boolean;
+    actionType: "SEND_PROVISIONAL_ALERTS";
+  };
 };
 
 export function buildCopilotReply(prompt: string, view: ForecastView): CopilotReply {
@@ -223,7 +241,8 @@ export function buildCopilotReply(prompt: string, view: ForecastView): CopilotRe
       proposal: {
         before: "0 alerts sent",
         after: "3 partners notified",
-        consequences: "Partners may reserve tentative capacity. No commitment until you confirm actual surplus after service.",
+        consequences:
+          "Partners may reserve tentative capacity. No commitment until you confirm actual surplus after service.",
         reversible: true,
         actionType: "SEND_PROVISIONAL_ALERTS",
       },
