@@ -3,9 +3,12 @@ import {
   applyAttendanceCorrection,
   buildForecastView,
   buildRecommendationKey,
+  CARBON_LEDGER_SOURCES,
   computePreventedImpact,
   computeShortage,
   computeWaste,
+  estimateCarbonKgForMeals,
+  estimateCarbonLedger,
   forecastViewFromState,
   impactCategoryDisclosures,
   preventedMealsDerivation,
@@ -137,9 +140,26 @@ describe("forecast", () => {
       "Recovered",
       "Nonrecoverable",
       "Forecast accuracy",
+      "Carbon estimate",
     ]);
     expect(disclosures.find((row) => row.title === "Prevented")?.desc).toContain("before service");
     expect(disclosures.find((row) => row.title === "Recovered")?.desc).toContain("Observed");
     expect(disclosures.find((row) => row.title === "Nonrecoverable")?.desc).toContain("Observed");
+    expect(disclosures.find((row) => row.title === "Carbon estimate")?.desc).toContain("Estimated");
+  });
+
+  it("computes a sourced estimated carbon ledger without changing meal counts", () => {
+    expect(estimateCarbonKgForMeals(1)).toBe(1);
+    expect(CARBON_LEDGER_SOURCES).toHaveLength(2);
+
+    const ledger = estimateCarbonLedger({
+      ...INITIAL.impact,
+      preventedMeals: 155,
+      recoveredMeals: 64,
+    });
+
+    expect(ledger.basisMeals).toBe(219);
+    expect(ledger.avoidedKgCO2e).toBe(219);
+    expect(ledger.methodology).toContain("estimate");
   });
 });
