@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  type ReactNode,
+} from "react";
 import type { ForecastProvenance } from "./forecast-gateway-types";
 import {
   CALENDAR_EVENTS,
@@ -103,7 +111,8 @@ export type Action =
   | { type: "ADVANCE_PICKUP"; pickupId: string; status: PickupStatus }
   | { type: "AUDIT"; event: Omit<AuditEvent, "id" | "ts"> }
   | { type: "MESSAGE"; message: Omit<Message, "id" | "ts"> }
-  | { type: "GUIDED_STEP"; step: number };
+  | { type: "GUIDED_STEP"; step: number }
+  | { type: "HYDRATE"; state: State };
 
 let demoTimeOffset = 0;
 
@@ -541,6 +550,8 @@ export function reducer(state: State, action: Action): State {
       return { ...state, messages: withMessage(state, action.message) };
     case "GUIDED_STEP":
       return { ...state, guidedStep: action.step };
+    case "HYDRATE":
+      return action.state;
     default:
       return state;
   }
@@ -549,6 +560,19 @@ export function reducer(state: State, action: Action): State {
 const Ctx = createContext<{ state: State; dispatch: React.Dispatch<Action> } | null>(null);
 
 const STORAGE_KEY = "ssp_state_v2";
+
+export function readPersistedState(): State | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) return hydrateState(raw);
+    const legacy = window.localStorage.getItem("ssp_state_v1");
+    if (legacy) return hydrateState(legacy);
+  } catch {
+    /* ignore corrupt localStorage */
+  }
+  return null;
+}
 
 export function hydrateState(raw: string): State {
   try {
@@ -571,21 +595,19 @@ export function hydrateState(raw: string): State {
 }
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, INITIAL, (init) => {
-    if (typeof window === "undefined") return init;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) return hydrateState(raw);
-      const legacy = window.localStorage.getItem("ssp_state_v1");
-      if (legacy) return hydrateState(legacy);
-    } catch {
-      /* ignore corrupt localStorage */
-    }
-    return init;
-  });
+  const [state, dispatch] = useReducer(reducer, INITIAL);
+  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const persisted = readPersistedState();
+    if (persisted) {
+      dispatch({ type: "HYDRATE", state: persisted });
+    }
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady || typeof window === "undefined") return;
     try {
       const {
         forecastLoadStatus: _status,
@@ -597,7 +619,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore corrupt localStorage */
     }
-  }, [state]);
+  }, [state, storageReady]);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

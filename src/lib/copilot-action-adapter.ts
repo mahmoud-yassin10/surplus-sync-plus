@@ -5,7 +5,7 @@ import {
   gatewayWhatIfRequestSchema,
   type ForecastProvenance,
 } from "./forecast-gateway-types";
-import { applyAttendanceCorrection } from "./forecast";
+import { applyAttendanceCorrection, shortageProbabilityForPrep } from "./forecast";
 import { assertPlanAboveFloor } from "./invariants";
 import { assertCanSelectPartner } from "./invariants";
 import { mapPartnerFromCopilot } from "./copilot-partners";
@@ -216,9 +216,12 @@ export function buildDeterministicFallbackReply(
 ): import("./copilot-contracts").CopilotStructuredResponse {
   const corrected = applyAttendanceCorrection(state.forecast);
   const lower = message.toLowerCase();
+  const formatPct = (prob: number) => `${(prob * 100).toFixed(1)}%`;
+  const baselineShortage = shortageProbabilityForPrep(state.forecast.recommendedPrep);
+  const correctedShortage = shortageProbabilityForPrep(corrected.recommendedPrep);
   if (lower.includes("540") || lower.includes("trip") || lower.includes("cancel")) {
     return {
-      answer: `If the field trip is cancelled, expected attendance rises to ${corrected.expectedAttendance} (${corrected.intervalLow}–${corrected.intervalHigh}) with recommended preparation of ${corrected.recommendedPrep} meals. This is a simulation only — no operational change until approved.`,
+      answer: `SIMULATION OUTCOME (what-if only — no operational state was written): If the cancelled field trip returns students, simulated attendance rises to ${corrected.expectedAttendance} (${corrected.intervalLow}–${corrected.intervalHigh}), recommended preparation becomes ${corrected.recommendedPrep}, preventable surplus is ${corrected.preventableSurplus}, shortage probability is ${formatPct(correctedShortage)}, and risk remains high. Session attendance stays at ${state.forecast.expectedAttendance} with recommended preparation ${state.forecast.recommendedPrep} until a proposal is approved.`,
       answerType: "SIMULATION",
       evidence: [
         {
@@ -227,24 +230,45 @@ export function buildDeterministicFallbackReply(
           sourceType: "MODEL_OUTPUT",
         },
         {
+          label: "Simulated interval",
+          value: `${corrected.intervalLow}–${corrected.intervalHigh}`,
+          sourceType: "MODEL_OUTPUT",
+        },
+        {
           label: "Recommended preparation",
           value: String(corrected.recommendedPrep),
           sourceType: "MODEL_OUTPUT",
         },
+        {
+          label: "Preventable surplus",
+          value: String(corrected.preventableSurplus),
+          sourceType: "MODEL_OUTPUT",
+        },
+        {
+          label: "Shortage probability",
+          value: formatPct(correctedShortage),
+          sourceType: "MODEL_OUTPUT",
+        },
+        { label: "Risk", value: "high", sourceType: "MODEL_OUTPUT" },
       ],
-      provenance: [{ source: "Local deterministic fallback", status: "DERIVED" }],
+      provenance: [{ source: "Canonical local fallback", status: "SYNTHETIC" }],
       uncertainty: {
         level: "MODERATE",
         explanation: "Copilot service unavailable — using local canonical simulation.",
       },
-      limitations: ["No backend session — proposals cannot be executed."],
+      limitations: [
+        "Copilot service unavailable.",
+        "Synthetic demo data.",
+        "Live ML unavailable.",
+        "No backend session — proposals cannot be executed.",
+      ],
       toolCalls: [],
       proposedActions: [],
       requiresHumanApproval: false,
     };
   }
   return {
-    answer: `Thursday risk is elevated because expected attendance is ${state.forecast.expectedAttendance} (${state.forecast.intervalLow}–${state.forecast.intervalHigh}) while the current plan is ${state.currentPlan} meals against a recommended ${state.forecast.recommendedPrep}.`,
+    answer: `Thursday is flagged high risk because expected attendance is ${state.forecast.expectedAttendance} (${state.forecast.intervalLow}–${state.forecast.intervalHigh}), recommended preparation is ${state.forecast.recommendedPrep}, preventable surplus is ${state.forecast.preventableSurplus}, shortage probability is ${formatPct(baselineShortage)}, and risk remains ${state.forecast.risk}.`,
     answerType: "EXPLANATION",
     evidence: [
       {
@@ -253,17 +277,38 @@ export function buildDeterministicFallbackReply(
         sourceType: "MODEL_OUTPUT",
       },
       {
+        label: "Attendance interval",
+        value: `${state.forecast.intervalLow}–${state.forecast.intervalHigh}`,
+        sourceType: "MODEL_OUTPUT",
+      },
+      {
         label: "Recommended preparation",
         value: String(state.forecast.recommendedPrep),
         sourceType: "MODEL_OUTPUT",
       },
+      {
+        label: "Preventable surplus",
+        value: String(state.forecast.preventableSurplus),
+        sourceType: "MODEL_OUTPUT",
+      },
+      {
+        label: "Shortage probability",
+        value: formatPct(baselineShortage),
+        sourceType: "MODEL_OUTPUT",
+      },
+      { label: "Risk", value: state.forecast.risk, sourceType: "MODEL_OUTPUT" },
     ],
-    provenance: [{ source: "Local deterministic fallback", status: "DERIVED" }],
+    provenance: [{ source: "Canonical local fallback", status: "SYNTHETIC" }],
     uncertainty: {
       level: "MODERATE",
       explanation: "Copilot service unavailable — using local canonical explanation.",
     },
-    limitations: ["No backend session — proposals cannot be executed."],
+    limitations: [
+      "Copilot service unavailable.",
+      "Synthetic demo data.",
+      "Live ML unavailable.",
+      "No backend session — proposals cannot be executed.",
+    ],
     toolCalls: [],
     proposedActions: [],
     requiresHumanApproval: false,

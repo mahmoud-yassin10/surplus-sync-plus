@@ -198,6 +198,31 @@ export function deriveMlSource(
   return "session-state";
 }
 
+export function deriveMlSourceFromResponse(
+  response: {
+    limitations?: string[];
+    provenance?: Array<{ source: string; status: string }>;
+  },
+  sessionState?: z.infer<typeof copilotBackendSessionStateSchema>,
+): "live-ml" | "canonical-fallback" | "session-state" {
+  const limitations = (response.limitations ?? []).join(" ").toLowerCase();
+  const provenance = response.provenance ?? [];
+
+  if (
+    limitations.includes("ml service was unavailable") ||
+    limitations.includes("canonical fallback") ||
+    provenance.some((item) => item.source.toLowerCase().includes("canonical fallback"))
+  ) {
+    return "canonical-fallback";
+  }
+
+  if (provenance.some((item) => item.source.includes("ML Service") && item.status === "PREDICTED")) {
+    return "live-ml";
+  }
+
+  return deriveMlSource(sessionState);
+}
+
 export async function upstreamCreateSession(
   role: ReconciliationSnapshot["role"],
 ): Promise<string> {
@@ -259,7 +284,7 @@ export async function upstreamSendMessage(
   return {
     response: data.result,
     mode: data.mode,
-    mlSource: deriveMlSource(data.state),
+    mlSource: deriveMlSourceFromResponse(data.result, data.state),
     sessionState: data.state,
     warning: data.warning,
   };

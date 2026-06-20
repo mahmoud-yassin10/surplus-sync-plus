@@ -27,7 +27,10 @@ describe("copilot drawer presentation helpers", () => {
 
   it("renders structured answer metadata labels", () => {
     expect(modeLabel(liveResponse.mode)).toBe("Gemini live");
-    expect(mlSourceLabel(liveResponse.mlSource)).toBe("live ML");
+    expect(modeLabel("MOCK_FALLBACK", "live-ml")).toBe("Deterministic Copilot response");
+    expect(modeLabel("MOCK_FALLBACK", "canonical-fallback")).toBe("Deterministic fallback");
+    expect(mlSourceLabel(liveResponse.mlSource)).toBe("live SurplusSync ML service");
+    expect(mlSourceLabel("canonical-fallback")).toContain("canonical local fallback");
     expect(answerTypeLabel(liveResponse.response.answerType)).toBe("explanation");
     expect(liveResponse.response.evidence[0]?.value).toBe("528");
     expect(liveResponse.response.provenance[0]?.source).toContain("ML");
@@ -38,7 +41,9 @@ describe("copilot drawer presentation helpers", () => {
     const fallback = buildDeterministicFallbackReply("Why is Thursday high risk?", INITIAL);
     expect(fallback.answer).toContain("528");
     expect(fallback.answer).toContain("562");
-    expect(fallback.limitations[0]).toContain("cannot be executed");
+    expect(fallback.answer).toContain("168");
+    expect(fallback.answer).toContain("4.1%");
+    expect(fallback.limitations[0]).toContain("Copilot service unavailable");
   });
 
   it("keeps deterministic prompts available through fallback simulation copy", () => {
@@ -49,5 +54,9 @@ describe("copilot drawer presentation helpers", () => {
     expect(simulation.answerType).toBe("SIMULATION");
     expect(simulation.answer).toContain("540");
     expect(simulation.answer).toContain("575");
+    expect(simulation.answer).toContain("512");
+    expect(simulation.answer).toContain("568");
+    expect(simulation.answer).toContain("155");
+    expect(simulation.answer).toContain("3.4%");
   });
 });

@@ -217,18 +217,21 @@ export type CopilotGatewayError = z.infer<typeof copilotGatewayErrorSchema>;
 export type CopilotMode = z.infer<typeof copilotModeSchema>;
 export type CopilotMlSource = z.infer<typeof copilotMlSourceSchema>;
 
-export function modeLabel(mode: CopilotMode): string {
-  return mode === "GEMINI_LIVE" ? "Gemini live" : "Deterministic fallback";
+export function modeLabel(mode: CopilotMode, mlSource?: CopilotMlSource): string {
+  if (mode === "GEMINI_LIVE") return "Gemini live";
+  if (mlSource === "live-ml") return "Deterministic Copilot response";
+  if (mlSource === "canonical-fallback") return "Deterministic fallback";
+  return "Deterministic response";
 }
 
 export function mlSourceLabel(source: CopilotMlSource): string {
   switch (source) {
     case "live-ml":
-      return "live ML";
+      return "live SurplusSync ML service";
     case "canonical-fallback":
-      return "canonical fallback";
+      return "canonical local fallback · synthetic demo data";
     case "session-state":
-      return "session state";
+      return "session state only";
   }
 }
 

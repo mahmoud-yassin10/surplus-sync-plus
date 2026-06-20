@@ -32,4 +32,11 @@ describe("localStorage persistence", () => {
     expect(restored.checklistComplete).toBe(true);
     expect(restored.forecast.expectedAttendance).toBe(540);
   });
+
+  it("restores guided demo progress via HYDRATE after SSR-safe initial state", () => {
+    const inProgress = reducer(INITIAL, { type: "GUIDED_STEP", step: 3 });
+    const hydrated = reducer(INITIAL, { type: "HYDRATE", state: inProgress });
+    expect(hydrated.guidedStep).toBe(3);
+    expect(INITIAL.guidedStep).toBe(0);
+  });
 });

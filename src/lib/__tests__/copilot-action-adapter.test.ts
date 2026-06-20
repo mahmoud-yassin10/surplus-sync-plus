@@ -107,6 +107,30 @@ describe("copilot action adapter", () => {
     if (result.ok) expect(result.actions).toEqual([{ type: "SEND_PROVISIONAL_ALERTS" }]);
   });
 
+  it("rejected alert proposal sends zero partner messages", async () => {
+    const result = await buildActionsAfterExecutedProposal(
+      INITIAL,
+      baseProposal({ status: "REJECTED" }),
+    );
+    expect(result.ok).toBe(false);
+    expect(INITIAL.messages.filter((m) => m.kind === "alert")).toHaveLength(0);
+  });
+
+  it("approved alert creates one message per available partner", async () => {
+    const availableCount = INITIAL.partners.filter((p) => p.status === "available").length;
+    const result = await buildActionsAfterExecutedProposal(
+      INITIAL,
+      baseProposal({ status: "EXECUTED" }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const next = result.actions.reduce((s, a) => reducer(s, a), INITIAL);
+    expect(next.messages.filter((m) => m.kind === "alert")).toHaveLength(availableCount);
+    expect(next.audit.filter((a) => a.action.startsWith("Sent provisional surplus alert"))).toHaveLength(
+      1,
+    );
+  });
+
   it("executed alert remains idempotent after alerts sent", async () => {
     const alerted = reducer(INITIAL, { type: "SEND_PROVISIONAL_ALERTS" });
     const result = await buildActionsAfterExecutedProposal(

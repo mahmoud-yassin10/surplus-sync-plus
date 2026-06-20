@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearSessionCookieHeader,
   CopilotGatewayError,
+  deriveMlSourceFromResponse,
   gatewayHealth,
   gatewayReset,
   gatewaySendMessage,
@@ -206,6 +207,24 @@ describe("copilot gateway", () => {
   it("never exposes service token in error payloads", () => {
     const error = new CopilotGatewayError("COPILOT_UNAVAILABLE", "Unavailable", 503);
     expect(error.message).not.toContain("test-token");
+  });
+
+  it("derives live ML source from response provenance", () => {
+    expect(
+      deriveMlSourceFromResponse({
+        provenance: [{ source: "SurplusSync ML Service", status: "PREDICTED" }],
+        limitations: ["Synthetic demo data."],
+      }),
+    ).toBe("live-ml");
+  });
+
+  it("derives canonical fallback from response limitations", () => {
+    expect(
+      deriveMlSourceFromResponse({
+        provenance: [{ source: "SurplusSync Canonical Fallback", status: "SYNTHETIC" }],
+        limitations: ["Forecast numbers were served from local canonical fallback because the ML service was unavailable."],
+      }),
+    ).toBe("canonical-fallback");
   });
 });
 

@@ -208,7 +208,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
   if (!open) return null;
 
   return (
-    <aside className="fixed right-0 top-0 bottom-0 w-full sm:w-[420px] bg-[var(--color-surface)] border-l border-[var(--color-line)] z-40 flex flex-col shadow-2xl">
+    <aside className="animate-drawer-right fixed right-0 top-0 bottom-0 w-full sm:w-[420px] bg-[var(--color-surface)] border-l border-[var(--color-line)] z-[var(--z-drawer)] flex flex-col shadow-2xl">
       <header className="px-4 py-3 border-b border-[var(--color-line)] flex items-center gap-2">
         <Sparkles size={15} className="text-[var(--color-ai)]" />
         <div>
@@ -278,7 +278,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
                     {answerTypeLabel(payload.answerType)}
                   </span>
                   <span className="text-[9.5px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">
-                    {modeLabel(entry.response.mode)}
+                    {modeLabel(entry.response.mode, entry.response.mlSource)}
                   </span>
                   <span className="text-[9.5px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-text-faint)]">
                     {mlSourceLabel(entry.response.mlSource)}
@@ -391,7 +391,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
                 })}
                 <div className="mt-3 pt-2 border-t border-[var(--color-line)] flex items-center justify-between text-[10px] text-[var(--color-text-faint)]">
                   <span>
-                    Model · ssp-forecast-1.0 · {modeLabel(entry.response.mode)} ·{" "}
+                    Model · ssp-forecast-1.0 · {modeLabel(entry.response.mode, entry.response.mlSource)} ·{" "}
                     {mlSourceLabel(entry.response.mlSource)}
                   </span>
                 </div>
