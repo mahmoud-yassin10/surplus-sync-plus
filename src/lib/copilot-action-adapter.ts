@@ -254,10 +254,10 @@ export function buildDeterministicFallbackReply(
       provenance: [{ source: "Canonical local fallback", status: "SYNTHETIC" }],
       uncertainty: {
         level: "MODERATE",
-        explanation: "Copilot service unavailable — using local canonical simulation.",
+        explanation: "AI service unavailable — using local canonical simulation.",
       },
       limitations: [
-        "Copilot service unavailable.",
+        "AI service unavailable.",
         "Synthetic demo data.",
         "Live ML unavailable.",
         "No backend session — proposals cannot be executed.",
@@ -301,10 +301,10 @@ export function buildDeterministicFallbackReply(
     provenance: [{ source: "Canonical local fallback", status: "SYNTHETIC" }],
     uncertainty: {
       level: "MODERATE",
-      explanation: "Copilot service unavailable — using local canonical explanation.",
+      explanation: "AI service unavailable — using local canonical explanation.",
     },
     limitations: [
-      "Copilot service unavailable.",
+      "AI service unavailable.",
       "Synthetic demo data.",
       "Live ML unavailable.",
       "No backend session — proposals cannot be executed.",

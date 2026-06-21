@@ -277,7 +277,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="group text-[12px] flex items-center gap-1.5 pl-2.5 pr-2 py-1.5 rounded-full bg-[var(--color-ai)] text-white press shadow-[0_4px_14px_-6px_var(--color-ai)] hover:shadow-[0_6px_20px_-6px_var(--color-ai)] transition-shadow duration-300"
             >
               <Sparkles size={13} className="transition-transform duration-300 group-hover:rotate-12" />
-              <span className="hidden sm:inline">Copilot</span>
+              <span className="hidden sm:inline">AI</span>
               <span className="h-1.5 w-1.5 rounded-full bg-white/80 pulse-dot" />
             </button>
           </div>

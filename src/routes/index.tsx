@@ -268,7 +268,7 @@ function CommandCenter() {
           </Section>
 
           <Section
-            title="Copilot insight"
+            title="AI insight"
             right={<Sparkles size={13} className="text-[var(--color-ai)]" />}
           >
             <div className="p-4 text-[12.5px] text-[var(--color-text-soft)] leading-relaxed">
@@ -293,7 +293,7 @@ function CommandCenter() {
                   to="/forecast"
                   className="text-[12px] px-3 py-1.5 rounded-md border border-[var(--color-line)]"
                 >
-                  Ask Copilot
+                  Ask AI
                 </Link>
               </div>
             </div>

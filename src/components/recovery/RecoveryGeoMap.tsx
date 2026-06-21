@@ -12,7 +12,6 @@ import {
   networkBounds,
   partnerCoord,
 } from "../../lib/geo";
-import { SkeletonBlock } from "../shell/motion";
 import { NetworkMap } from "./NetworkMap";
 
 type MatchState = "provisional" | "reserved" | "confirmed" | "completed" | undefined;
@@ -78,6 +77,7 @@ export function RecoveryGeoMap({
   const mapRef = useRef<MapLibre.Map | null>(null);
   const markersRef = useRef<Map<string, { marker: MapLibre.Marker; el: HTMLElement }>>(new Map());
   const rafRef = useRef<number | null>(null);
+  const fallbackTimerRef = useRef<number | null>(null);
   const loadedRef = useRef(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -128,6 +128,10 @@ export function RecoveryGeoMap({
     let cancelled = false;
     if (typeof window === "undefined" || !containerRef.current) return;
 
+    fallbackTimerRef.current = window.setTimeout(() => {
+      if (!loadedRef.current) setStatus("error");
+    }, 2500);
+
     void (async () => {
       try {
         const maplibregl = (await import("maplibre-gl")).default;
@@ -137,11 +141,11 @@ export function RecoveryGeoMap({
           container: containerRef.current,
           style: basemapStyleUrl(prefersDarkMap()),
           center: SCHOOL_GEO.coord,
-          zoom: 12,
-          pitch: 50,
+          zoom: 11.6,
+          pitch: 30,
           bearing: -17,
           attributionControl: { compact: true },
-          canvasContextAttributes: { antialias: true },
+          fadeDuration: 0,
         });
         mapRef.current = map;
 
@@ -151,6 +155,10 @@ export function RecoveryGeoMap({
         map.on("load", () => {
           if (cancelled) return;
           loadedRef.current = true;
+          if (fallbackTimerRef.current) {
+            window.clearTimeout(fallbackTimerRef.current);
+            fallbackTimerRef.current = null;
+          }
 
           map.addSource("arcs", { type: "geojson", data: arcCollection() });
 
@@ -218,6 +226,7 @@ export function RecoveryGeoMap({
     return () => {
       cancelled = true;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
       markersRef.current.forEach(({ marker }) => marker.remove());
       markersRef.current.clear();
       mapRef.current?.remove();
@@ -233,7 +242,7 @@ export function RecoveryGeoMap({
       padding: { top: 70, bottom: 70, left: 60, right: 60 },
       pitch: 50,
       bearing: -17,
-      duration: prefersReducedMotion() ? 0 : 1200,
+      duration: prefersReducedMotion() ? 0 : 350,
       maxZoom: 13.5,
     });
   }
@@ -328,12 +337,19 @@ export function RecoveryGeoMap({
 
   return (
     <div className="relative aspect-[5/3] w-full rounded-md border border-[var(--color-line)] overflow-hidden bg-[var(--color-surface-2)]">
-      <div ref={containerRef} className="absolute inset-0" />
+      {status === "loading" && (
+        <div className="absolute inset-0">
+          <NetworkMap onSelect={onSelect} selectedId={selectedId} />
+        </div>
+      )}
+      <div
+        ref={containerRef}
+        className={`absolute inset-0 ${status === "ready" ? "" : "pointer-events-none opacity-0"}`}
+      />
 
       {status === "loading" && (
-        <div className="absolute inset-0 p-3">
-          <SkeletonBlock className="h-full w-full" />
-          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-[var(--color-text-faint)]">
+        <div className="absolute inset-x-3 top-3 z-10">
+          <div className="rounded-md bg-[var(--color-surface)]/90 backdrop-blur-md border border-[var(--color-line)] px-3 py-2 text-[11px] text-[var(--color-text-soft)] shadow-lg">
             Loading live network map…
           </div>
         </div>

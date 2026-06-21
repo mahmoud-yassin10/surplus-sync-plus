@@ -27,7 +27,7 @@ describe("copilot drawer presentation helpers", () => {
 
   it("renders structured answer metadata labels", () => {
     expect(modeLabel(liveResponse.mode)).toBe("Gemini live");
-    expect(modeLabel("MOCK_FALLBACK", "live-ml")).toBe("Deterministic Copilot response");
+    expect(modeLabel("MOCK_FALLBACK", "live-ml")).toBe("Deterministic AI response");
     expect(modeLabel("MOCK_FALLBACK", "canonical-fallback")).toBe("Deterministic fallback");
     expect(mlSourceLabel(liveResponse.mlSource)).toBe("live SurplusSync ML service");
     expect(mlSourceLabel("canonical-fallback")).toContain("canonical local fallback");
@@ -43,7 +43,7 @@ describe("copilot drawer presentation helpers", () => {
     expect(fallback.answer).toContain("562");
     expect(fallback.answer).toContain("168");
     expect(fallback.answer).toContain("4.1%");
-    expect(fallback.limitations[0]).toContain("Copilot service unavailable");
+    expect(fallback.limitations[0]).toContain("AI service unavailable");
   });
 
   it("keeps deterministic prompts available through fallback simulation copy", () => {

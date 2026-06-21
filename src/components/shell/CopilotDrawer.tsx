@@ -106,7 +106,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
         dispatch({
           type: "AUDIT",
           event: {
-            actor: "AI Copilot",
+            actor: "AI Assistant",
             actorType: "ai",
             action: `Answered: "${prompt}"`,
             reversible: false,
@@ -212,7 +212,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
       <header className="px-4 py-3 border-b border-[var(--color-line)] flex items-center gap-2">
         <Sparkles size={15} className="text-[var(--color-ai)]" />
         <div>
-          <div className="text-[13px] font-semibold">AI Operations Copilot</div>
+          <div className="text-[13px] font-semibold">AI Operations Assistant</div>
           <div className="text-[11px] text-[var(--color-text-faint)]">
             Proposes actions · cannot mutate state without approval
           </div>
@@ -229,7 +229,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
         {thread.length === 0 && (
           <div className="space-y-3">
             <p className="text-[12px] text-[var(--color-text-soft)] leading-relaxed">
-              Ask about Thursday's forecast, simulate changes, or draft an action. The Copilot will
+              Ask about Thursday's forecast, simulate changes, or draft an action. The AI assistant will
               explain its evidence and request approval for anything consequential.
             </p>
             <div className="space-y-1.5">
@@ -251,7 +251,7 @@ export function CopilotDrawer({ open, onClose }: { open: boolean; onClose: () =>
         {lastFailedPrompt && (
           <div className="rounded-md border border-[var(--color-critical)]/30 bg-[var(--color-critical)]/5 p-3 text-[12px]">
             <p className="text-[var(--color-text-soft)] mb-2">
-              Copilot could not complete that request. You can retry safely.
+              AI assistant could not complete that request. You can retry safely.
             </p>
             <button
               onClick={() => void send(lastFailedPrompt)}

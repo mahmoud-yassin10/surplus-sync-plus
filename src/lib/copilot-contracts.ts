@@ -231,7 +231,7 @@ export type CopilotMlSource = z.infer<typeof copilotMlSourceSchema>;
 
 export function modeLabel(mode: CopilotMode, mlSource?: CopilotMlSource): string {
   if (mode === "GEMINI_LIVE") return "Gemini live";
-  if (mlSource === "live-ml") return "Deterministic Copilot response";
+  if (mlSource === "live-ml") return "Deterministic AI response";
   if (mlSource === "canonical-fallback") return "Deterministic fallback";
   return "Deterministic response";
 }

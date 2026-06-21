@@ -305,7 +305,7 @@ export function reducer(state: State, action: Action): State {
           actor: ACTOR_NAMES[state.role],
           actorType: "human",
           action: `Sent provisional surplus alert to ${eligible.length} partners`,
-          reason: "AI Copilot drafted alert, human approved sending",
+          reason: "AI assistant drafted alert, human approved sending",
           reversible: true,
         }),
       };

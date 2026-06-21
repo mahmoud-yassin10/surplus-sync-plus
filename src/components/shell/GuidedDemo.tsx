@@ -1,7 +1,8 @@
 import { Play, X } from "lucide-react";
-import { useEffect } from "react";
-import { useStore } from "../../lib/store";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "@tanstack/react-router";
+import { useStore } from "../../lib/store";
 
 const STEPS: {
   title: string;
@@ -26,13 +27,13 @@ const STEPS: {
   },
   {
     title: "Correct attendance",
-    description: "Field trip cancelled — approve the human correction.",
+    description: "Field trip cancelled - approve the human correction.",
     to: "/attendance",
     action: (d) => d({ type: "CORRECT_ATTENDANCE" }),
   },
   {
     title: "Send provisional alerts",
-    description: "Notify available recovery partners (not a confirmed donation).",
+    description: "Notify available recovery partners, not a confirmed donation.",
     to: "/recovery",
     action: (d) => d({ type: "SEND_PROVISIONAL_ALERTS" }),
   },
@@ -59,7 +60,7 @@ const STEPS: {
   },
   {
     title: "Review impact and audit",
-    description: "Numbers stay separated: prevented · recovered · wasted.",
+    description: "Numbers stay separated: prevented, recovered, wasted.",
     to: "/impact",
   },
 ];
@@ -67,13 +68,71 @@ const STEPS: {
 export function GuidedDemo() {
   const { state, dispatch } = useStore();
   const navigate = useNavigate();
+  const [mounted, setMounted] = useState(false);
   const active = state.guidedStep > 0;
   const step = STEPS[state.guidedStep - 1];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (active && step) navigate({ to: step.to });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.guidedStep]);
+
+  const guideCard =
+    mounted && active && step
+      ? createPortal(
+          <div
+            key={state.guidedStep}
+            className="animate-rise fixed right-4 sm:right-5 z-[var(--z-toast)] w-[340px] max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] shadow-xl overflow-hidden flex flex-col"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+          >
+            <div className="px-4 py-2.5 border-b border-[var(--color-line)] flex items-center bg-[var(--color-ink)] text-white shrink-0">
+              <div className="text-[10.5px] uppercase tracking-[0.16em] opacity-70">
+                Guided demo - step {state.guidedStep} of {STEPS.length}
+              </div>
+              <button
+                onClick={() => dispatch({ type: "GUIDED_STEP", step: 0 })}
+                className="ml-auto opacity-70 hover:opacity-100"
+                aria-label="Close guided demo"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="px-4 py-3.5 overflow-y-auto">
+              <div className="text-[13.5px] font-semibold mb-1">{step.title}</div>
+              <p className="text-[12px] text-[var(--color-text-soft)] leading-relaxed">
+                {step.description}
+              </p>
+            </div>
+            <div className="px-4 py-3 border-t border-[var(--color-line)] flex gap-2 bg-[var(--color-surface)] shrink-0">
+              <button
+                onClick={() =>
+                  dispatch({ type: "GUIDED_STEP", step: Math.max(1, state.guidedStep - 1) })
+                }
+                className="text-[11.5px] px-2.5 py-1.5 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)]"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => {
+                  step.action?.(dispatch);
+                  dispatch({
+                    type: "GUIDED_STEP",
+                    step: state.guidedStep < STEPS.length ? state.guidedStep + 1 : 0,
+                  });
+                }}
+                className="ml-auto text-[11.5px] px-3 py-1.5 rounded-md bg-[var(--color-ai)] text-white"
+              >
+                {state.guidedStep === STEPS.length ? "Finish" : step.action ? "Run step" : "Continue"}
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <>
@@ -83,53 +142,7 @@ export function GuidedDemo() {
       >
         <Play size={11} /> Start guided demo
       </button>
-
-      {active && step && (
-        <div
-          key={state.guidedStep}
-          className="animate-rise fixed bottom-5 right-5 z-[var(--z-toast)] w-[340px] max-w-[calc(100vw-2.5rem)] rounded-lg border border-[var(--color-line)] bg-[var(--color-surface)] shadow-xl overflow-hidden"
-        >
-          <div className="px-4 py-2.5 border-b border-[var(--color-line)] flex items-center bg-[var(--color-ink)] text-white">
-            <div className="text-[10.5px] uppercase tracking-[0.16em] opacity-70">
-              Guided demo · step {state.guidedStep} of {STEPS.length}
-            </div>
-            <button
-              onClick={() => dispatch({ type: "GUIDED_STEP", step: 0 })}
-              className="ml-auto opacity-70 hover:opacity-100"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <div className="px-4 py-3.5">
-            <div className="text-[13.5px] font-semibold mb-1">{step.title}</div>
-            <p className="text-[12px] text-[var(--color-text-soft)] leading-relaxed">
-              {step.description}
-            </p>
-          </div>
-          <div className="px-4 py-3 border-t border-[var(--color-line)] flex gap-2">
-            <button
-              onClick={() =>
-                dispatch({ type: "GUIDED_STEP", step: Math.max(1, state.guidedStep - 1) })
-              }
-              className="text-[11.5px] px-2.5 py-1.5 rounded-md border border-[var(--color-line)] hover:bg-[var(--color-surface-2)]"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => {
-                step.action?.(dispatch);
-                dispatch({
-                  type: "GUIDED_STEP",
-                  step: state.guidedStep < STEPS.length ? state.guidedStep + 1 : 0,
-                });
-              }}
-              className="ml-auto text-[11.5px] px-3 py-1.5 rounded-md bg-[var(--color-ai)] text-white"
-            >
-              {state.guidedStep === STEPS.length ? "Finish" : step.action ? "Run step" : "Continue"}
-            </button>
-          </div>
-        </div>
-      )}
+      {guideCard}
     </>
   );
 }
